@@ -1,0 +1,18 @@
+appConfig: 
+  Env: "local"
+webConfig:
+  ListenAddress: ":8888"
+  JwtSecret: "your_jwt"
+  ReadTimeout: 15
+  WriteTimeout: 15
+
+grpcClientConfig:
+  URL: "parserserver:50052"
+  
+postgresConfig:
+  DbHost: "postgres"
+  DbPort: 5432
+  DbUser: "postgres"
+  DbPassword: "veryStrongPassword"
+  DbName: "SumTel"
+  DbSslMode: "disable"

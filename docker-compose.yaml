@@ -1,0 +1,72 @@
+services:
+  # rest:
+  #   build:
+  #     context: ./services/rest
+  #     dockerfile: cmd/api/Dockerfile
+  #   ports:
+  #     - "8080:8888"
+  #   expose:
+  #     - "8888"
+  #   depends_on:
+  #     - postgres
+  #     - parserserver
+  #   networks:
+  #     - my-network
+  #   volumes:
+  #     - ./services/rest/config:/app/config
+
+  # parserserver:
+  #   build:
+  #     context: ./services/tg_parser
+  #     dockerfile: cmd/Dockerfile
+  #   expose:
+  #     - "50052"
+  #   networks:
+  #     - my-network
+
+  postgres:
+    image: postgres:18.0-alpine3.22
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=veryStrongPassword
+      - POSTGRES_DB=SumTel
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - my-network
+  
+  # migrator:
+  #   build:
+  #     context: ./services/migrator
+  #     dockerfile: cmd/Dockerfile
+  #   volumes:
+  #     - ./shared/config:/services/migrator/config
+  #     - ./services/core/migrations:/services/migrator/core-migrations
+  #     - ./services/tg_parser/migrations:/services/migrator/parser-migrations
+  #     - ./shared:/shared
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - my-network
+  migrator:
+    build:
+      context: .
+      dockerfile: ./services/migrator/cmd/Dockerfile
+    volumes:
+      - ./shared/config:/services/migrator/config
+      - ./services/core/migrations:/services/migrator/core-migrations
+      - ./services/parser/migrations:/services/migrator/parser-migrations
+    depends_on:
+      - postgres
+    networks:
+      - my-network
+
+
+volumes:
+  db_data:
+networks:
+  my-network:
+    driver: bridge
