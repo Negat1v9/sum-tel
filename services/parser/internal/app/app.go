@@ -43,13 +43,13 @@ func (a *App) Run() error {
 	// start listen tcp socket
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", a.port))
 	if err != nil {
-		return fmt.Errorf("grpcapp.Run: %v", err)
+		return fmt.Errorf("grpcapp.Run: %w", err)
 	}
 
 	a.log.Info("gRPC server started", slog.Int("port", a.port))
 
 	if err := a.gRPCServer.Serve(l); err != nil {
-		return fmt.Errorf("grpcapp.Run: %v", err)
+		return fmt.Errorf("grpcapp.Run: %w", err)
 	}
 
 	return nil

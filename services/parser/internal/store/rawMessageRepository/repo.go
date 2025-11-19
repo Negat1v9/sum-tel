@@ -29,7 +29,7 @@ func (r *rawMessageRepository) CreateMessages(ctx context.Context, tx sqltransac
 
 	for i, msg := range msgs {
 		offset := i * 8
-		placeholder = append(placeholder, fmt.Sprintf("(%d, %d, %d, %d, %d, %d, %d, %d)", offset+1, offset+2, offset+3, offset+4, offset+5, offset+6, offset+7, offset+8))
+		placeholder = append(placeholder, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)", offset+1, offset+2, offset+3, offset+4, offset+5, offset+6, offset+7, offset+8))
 		args = append(args, msg.ChannelID, msg.ContentType, msg.TelegramMessageID, msg.HTMLText, msg.Status, msg.MediaURLs, msg.MessageDate, msg.ReceivedAt)
 	}
 
