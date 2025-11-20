@@ -23,21 +23,22 @@ func NewCatcherNews(log *logger.Logger, chService *channelservice.ChannelService
 
 // panic on error loadAllChannels
 func (c *CatcherNews) Start(ctx context.Context) {
-	c.log.Infof("newnews.Start: News catcher worker started")
+	c.log.Infof("CatcherNews.Start: News catcher worker started")
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
-			c.log.Infof("newnews.Start: News catcher worker received stop signal")
+			c.log.Infof("CatcherNews.Start: News catcher worker received stop signal")
 			return
 		case <-ticker.C:
 			ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 			channelsToParse, err := c.chService.ChannelsToParse(ctx, 100, 0) // todo: pagination
 			cancel()
+			c.log.Debugf("CatcherNews.Start: len(channelToParse): %d", len(channelsToParse))
 			if err != nil {
-				c.log.Errorf("newnews.Start: Error fetching channels to parse: %v", err)
+				c.log.Errorf("CatcherNews.Start: Error fetching channels to parse: %v", err)
 				continue
 			}
 			for _, ch := range channelsToParse {
@@ -56,8 +57,8 @@ func (c *CatcherNews) parseChannel(ch *model.Channel) {
 	// Fetch and parse the channel's messages
 	err := c.chService.ParseChannel(ctx, ch.ID, ch.Username)
 	if err != nil {
-		c.log.Errorf("newnews.parseChannel: Error parsing channel %d: %v", ch.ID, err)
+		c.log.Errorf("CatcherNews.parseChannel: Error parsing channel %d: %v", ch.ID, err)
 		return
 	}
-	c.log.Debugf("newnews.parseChannel: Successfully parsed channel %d", ch.ID)
+	c.log.Debugf("CatcherNews.parseChannel: Successfully parsed channel %d", ch.ID)
 }

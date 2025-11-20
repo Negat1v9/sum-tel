@@ -1,10 +1,13 @@
 package app
 
 import (
+	"context"
+
 	channelservice "github.com/Negat1v9/sum-tel/services/core/internal/channel/service"
 	grpcclient "github.com/Negat1v9/sum-tel/services/core/internal/grpc/client"
 	"github.com/Negat1v9/sum-tel/services/core/internal/server"
 	"github.com/Negat1v9/sum-tel/services/core/internal/store"
+	channelchecker "github.com/Negat1v9/sum-tel/services/core/internal/workers/channel-checker"
 	"github.com/Negat1v9/sum-tel/shared/config"
 	"github.com/Negat1v9/sum-tel/shared/logger"
 	"github.com/Negat1v9/sum-tel/shared/postgres"
@@ -43,6 +46,10 @@ func (a *App) Run() error {
 
 	server := server.New(a.cfg, a.log)
 	server.MapHandlers(channelService)
+
+	chCheckerWorker := channelchecker.NewCatcherNews(a.log, channelService)
+
+	go chCheckerWorker.Start(context.TODO()) // shutDown
 
 	a.log.Infof("server is starting on %s", a.cfg.WebConfig.ListenAddress)
 	// TODO: add graceful shutdown

@@ -18,6 +18,16 @@ type Channel struct {
 	UpdatedAt     time.Time      `db:"updated_at"`
 }
 
+type ChannelMessages struct {
+	Type      string   `json:"type"`
+	Text      string   `json:"text"`
+	HTMLText  string   `json:"html_text"`
+	Link      string   `json:"link"`
+	MsgID     int64    `json:"msg_id"`
+	Date      int64    `json:"date"`
+	PhotoURLs []string `json:"photo_urls,omitempty"`
+}
+
 func NewChannel(id uuid.UUID, username, title, description string, parseInterval int, createdAt time.Time) *Channel {
 	return &Channel{
 		ID:            id,

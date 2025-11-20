@@ -11,12 +11,12 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id);
 
 CREATE TABLE IF NOT EXISTS channels (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    id uuid PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     title VARCHAR(100) NOT NULL,
     description TEXT,
-    parse_interval INT DEFAULT 30,
-    last_parsed_at TIMESTAMP WITH TIME ZONE,
+    parse_interval INT NOT NULL DEFAULT 30,
+    last_parsed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

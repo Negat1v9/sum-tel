@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Negat1v9/sum-tel/services/core/internal/model"
+	"github.com/Negat1v9/sum-tel/shared/sqltransaction"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -15,8 +16,8 @@ func NewUserSubscriptionRepository(db *sqlx.DB) *UserSubscriptionRepository {
 	return &UserSubscriptionRepository{db: db}
 }
 
-func (r *UserSubscriptionRepository) Create(ctx context.Context, sub *model.UserSubscription) (*model.UserSubscription, error) {
-	row := r.db.QueryRowxContext(
+func (r *UserSubscriptionRepository) Create(ctx context.Context, tx sqltransaction.Txx, sub *model.UserSubscription) (*model.UserSubscription, error) {
+	row := tx.QueryRowxContext(
 		ctx,
 		createSubscriptionQuery,
 		sub.UserID,

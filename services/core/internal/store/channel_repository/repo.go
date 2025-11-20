@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Negat1v9/sum-tel/services/core/internal/model"
+	"github.com/Negat1v9/sum-tel/shared/sqltransaction"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -16,8 +17,8 @@ func NewChannelRepository(db *sqlx.DB) *ChannelRepository {
 	return &ChannelRepository{db: db}
 }
 
-func (r *ChannelRepository) Create(ctx context.Context, channel *model.Channel) (*model.Channel, error) {
-	row := r.db.QueryRowxContext(
+func (r *ChannelRepository) Create(ctx context.Context, tx sqltransaction.Txx, channel *model.Channel) (*model.Channel, error) {
+	row := tx.QueryRowxContext(
 		ctx,
 		createChannelQuery,
 		channel.ID,
