@@ -2,7 +2,6 @@ grpcServerConfig:
   GPRPCPort: 50043
 
 postgresConfig:
-  GPRPCPort: 50043
   DbHost: "postgres"
   DbPort: 5432
   DbUser: "parseruser"
