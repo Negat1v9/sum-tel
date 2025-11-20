@@ -1,4 +1,4 @@
-appConfig: 
+appConfig:
   Env: "local"
 webConfig:
   ListenAddress: ":8888"
@@ -7,8 +7,8 @@ webConfig:
   WriteTimeout: 15
 
 grpcClientConfig:
-  URL: "parserserver:50052"
-  
+  URL: "parserserver:50043"
+
 postgresConfig:
   DbHost: "postgres"
   DbPort: 5432
