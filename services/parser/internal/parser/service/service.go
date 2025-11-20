@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	parserv1 "github.com/Negat1v9/sum-tel/services/parser/internal/grpc/proto"
 	"github.com/Negat1v9/sum-tel/services/parser/internal/model"
@@ -12,6 +14,11 @@ import (
 
 const (
 	DefaultTimePerMessage = 30 // base time in minutes
+)
+
+var (
+	// error on parsing new channel and it not have any messages
+	ErrChannelNoMessages = errors.New("channel has no messages")
 )
 
 type ParserService struct {
@@ -24,15 +31,17 @@ func NewParserService(parser *tgparser.TgParser, storage *store.Store) *ParserSe
 }
 
 func (s *ParserService) ParseNewChannel(ctx context.Context, channelID string, username string) (*parserv1.NewChannelResponse, error) {
+	const mn = "ParserService.ParseNewChannel"
+	// parse telegram meesage and receive information about it and latest ~12 messasges
 	r, err := s.parser.ParseChannel(ctx, username)
 	if err != nil {
-		return nil, fmt.Errorf("messages.MessageService.ParseNewChannel: %w", err)
+		return nil, fmt.Errorf("%s: %w", mn, err)
 	}
 
 	if len(r.Messages) == 0 {
-		return nil, fmt.Errorf("messages.MessageService.ParseNewChannel: no messages found for channel %s", username)
+		return nil, fmt.Errorf("%s: %w", mn, ErrChannelNoMessages)
 	}
-
+	// save in db messages if exitst
 	tx, err := s.storage.Transaction(ctx)
 	if err != nil {
 		return nil, err
@@ -46,7 +55,6 @@ func (s *ParserService) ParseNewChannel(ctx context.Context, channelID string, u
 		}
 	}()
 
-	// TODO: save channels messages to DB
 	err = s.storage.RawMsgRepo().CreateMessages(ctx, tx, convertToModel(channelID, r.Messages))
 	if err != nil {
 		return nil, err
@@ -62,40 +70,69 @@ func (s *ParserService) ParseNewChannel(ctx context.Context, channelID string, u
 }
 
 func (s *ParserService) ParseMessages(ctx context.Context, channelID string, username string) (*parserv1.ParseMessagesResponse, error) {
+	const mn = "ParserService.ParseMessages"
 	// get latest message from DB to recognize from which message to parse new ones
 	latestMsg, err := s.storage.RawMsgRepo().GetLatestChannelMessage(ctx, channelID)
 	if err != nil {
-		return nil, fmt.Errorf("messages.MessageService.ParseMessages: %w", err)
+		return nil, fmt.Errorf("%s: %w", mn, err)
 	}
 
-	// parese new messages from telegram
+	// max count of errors in loop after return break the loop
+	countErr := 3
+	// stack error contains all error in loop if exists
+	errorsStack := make([]error, 0, 3)
+	// the number of iterations needed to calculate the average time between messages as a divisor
+	numberIterations := 0
+	// chennel for result parse from worker
+	var msgsInteval int32 = DefaultTimePerMessage
 
-	msgs, err := s.parser.ParseMessages(ctx, username, latestMsg.TelegramMessageID)
-	if err != nil {
-		return nil, fmt.Errorf("messages.MessageService.ParseMessages: %w", err)
+	sleepOnErrTime := time.Second
+	// call on error for not copy it every time then error
+	onErrFn := func() {
+		errorsStack = append(errorsStack, err)
+		countErr--
+		time.Sleep(sleepOnErrTime)
 	}
+	for {
+		if countErr <= 0 {
+			return nil, fmt.Errorf("%s: %w", mn, errors.Join(errorsStack...))
+		}
+		numberIterations++
+		// parse telegram
+		msgs, err := s.parser.ParseMessages(ctx, username, latestMsg.TelegramMessageID)
+		if err != nil {
+			onErrFn()
+			continue
+		}
+		// no more messages
+		if len(msgs) == 0 {
+			break
+		}
+		// add medium duraion between messages
+		msgsInteval += int32(calculateParseTime(msgs))
+		// save new messages in db
+		tx, err := s.storage.Transaction(ctx)
+		if err != nil {
+			onErrFn()
+			continue
+		}
 
-	tx, err := s.storage.Transaction(ctx)
-	if err != nil {
-		return nil, err
-	}
-	// commit or rollback transaction
-	defer func() {
+		// save messages in db
+		err = s.storage.RawMsgRepo().CreateMessages(ctx, tx, convertToModel(channelID, msgs))
 		if err != nil {
 			tx.Rollback()
+			onErrFn()
 		} else {
-			tx.Commit()
+			err = tx.Commit()
+			if err != nil {
+				onErrFn()
+			}
 		}
-	}()
 
-	err = s.storage.RawMsgRepo().CreateMessages(ctx, tx, convertToModel(channelID, msgs))
-	if err != nil {
-		return nil, err
 	}
-
 	return &parserv1.ParseMessagesResponse{
 		Success:     true,
-		MsgInterval: int32(calculateParseTime(msgs)),
+		MsgInterval: msgsInteval / int32(numberIterations),
 	}, nil
 }
 

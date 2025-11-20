@@ -92,6 +92,7 @@ func (p *TgParser) ParseMessages(ctx context.Context, username string, afterMsgI
 		return nil, err
 	}
 
+	// set headers needed for telegram server
 	req.Header.Add("Accept", "application/json, text/javascript, */*; q=0.0")
 	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0.1 Safari/605.1.15")
 	req.Header.Add("Origin", "https://t.me")
