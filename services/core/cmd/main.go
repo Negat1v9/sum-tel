@@ -12,7 +12,7 @@ import (
 
 func main() {
 	// load config
-	cfg, err := config.LoadCoreConfig("./config/config")
+	cfg, err := config.LoadCoreConfig("./config/core-config")
 
 	if err != nil {
 		log.Printf("[error] load config: %v", err)

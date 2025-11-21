@@ -3,6 +3,8 @@ package store
 import (
 	"context"
 
+	"github.com/Negat1v9/sum-tel/shared/sqltransaction"
+
 	"github.com/Negat1v9/sum-tel/services/core/internal/model"
 	"github.com/Negat1v9/sum-tel/services/core/internal/store/channel_repository"
 	"github.com/Negat1v9/sum-tel/services/core/internal/store/subscription_repository"
@@ -20,7 +22,7 @@ type UserRepository interface {
 }
 
 type ChannelRepository interface {
-	Create(ctx context.Context, channel *model.Channel) (*model.Channel, error)
+	Create(ctx context.Context, tx sqltransaction.Txx, channel *model.Channel) (*model.Channel, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Channel, error)
 	GetByUsername(ctx context.Context, username string) (*model.Channel, error)
 	GetAll(ctx context.Context, limit, offset int) ([]model.Channel, error)
@@ -30,7 +32,7 @@ type ChannelRepository interface {
 }
 
 type UserChannelSubscriptionRepository interface {
-	Create(ctx context.Context, sub *model.UserSubscription) (*model.UserSubscription, error)
+	Create(ctx context.Context, tx sqltransaction.Txx, sub *model.UserSubscription) (*model.UserSubscription, error)
 	GetByID(ctx context.Context, id int64) (*model.UserSubscription, error)
 	GetAll(ctx context.Context, limit, offset int) ([]model.UserSubscription, error)
 	Update(ctx context.Context, sub *model.UserSubscription) (*model.UserSubscription, error)
@@ -39,15 +41,48 @@ type UserChannelSubscriptionRepository interface {
 }
 
 type Storage struct {
-	UserRepo    UserRepository
-	ChannelRepo ChannelRepository
-	SubRepo     UserChannelSubscriptionRepository
+	db          *sqlx.DB
+	sqlTx       sqltransaction.SqlTx
+	userRepo    UserRepository
+	channelRepo ChannelRepository
+	subRepo     UserChannelSubscriptionRepository
 }
 
 func NewStorage(db *sqlx.DB) *Storage {
 	return &Storage{
-		UserRepo:    user_repository.NewUserRepository(db),
-		ChannelRepo: channel_repository.NewChannelRepository(db),
-		SubRepo:     subscription_repository.NewUserSubscriptionRepository(db),
+		db:          db,
+		sqlTx:       sqltransaction.NewSqlTransaction(db),
+		userRepo:    user_repository.NewUserRepository(db),
+		channelRepo: channel_repository.NewChannelRepository(db),
+		subRepo:     subscription_repository.NewUserSubscriptionRepository(db),
 	}
+}
+
+func (s *Storage) UserRepo() UserRepository {
+	if s.userRepo == nil {
+		s.userRepo = user_repository.NewUserRepository(s.db)
+	}
+	return s.userRepo
+}
+
+func (s *Storage) ChannelRepo() ChannelRepository {
+	if s.channelRepo == nil {
+		s.channelRepo = channel_repository.NewChannelRepository(s.db)
+	}
+	return s.channelRepo
+}
+
+func (s *Storage) SubRepo() UserChannelSubscriptionRepository {
+	if s.subRepo == nil {
+		s.subRepo = subscription_repository.NewUserSubscriptionRepository(s.db)
+	}
+	return s.subRepo
+}
+
+func (s *Storage) Transaction(ctx context.Context) (sqltransaction.Txx, error) {
+	tx, err := s.sqlTx.StartTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
 }

@@ -1,28 +1,37 @@
 services:
-  # rest:
-  #   build:
-  #     context: ./services/rest
-  #     dockerfile: cmd/api/Dockerfile
-  #   ports:
-  #     - "8080:8888"
-  #   expose:
-  #     - "8888"
-  #   depends_on:
-  #     - postgres
-  #     - parserserver
-  #   networks:
-  #     - my-network
-  #   volumes:
-  #     - ./services/rest/config:/app/config
+  rest:
+    build:
+      context: .
+      dockerfile: ./services/core/cmd/Dockerfile
+    ports:
+      - 8080:8888
+    expose:
+      - 8888
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    networks:
+      - my-network
+    volumes:
+      - ./shared/config:/app/config
 
-  # parserserver:
-  #   build:
-  #     context: ./services/tg_parser
-  #     dockerfile: cmd/Dockerfile
-  #   expose:
-  #     - "50052"
-  #   networks:
-  #     - my-network
+  parserserver:
+    build:
+      context: .
+      dockerfile: ./services/parser/cmd/Dockerfile
+    expose:
+      - 50043
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    networks:
+      - my-network
+    volumes:
+      - ./shared/config:/app/config
 
   postgres:
     image: postgres:18.0-alpine3.22
@@ -37,20 +46,12 @@ services:
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - my-network
-  
-  # migrator:
-  #   build:
-  #     context: ./services/migrator
-  #     dockerfile: cmd/Dockerfile
-  #   volumes:
-  #     - ./shared/config:/services/migrator/config
-  #     - ./services/core/migrations:/services/migrator/core-migrations
-  #     - ./services/tg_parser/migrations:/services/migrator/parser-migrations
-  #     - ./shared:/shared
-  #   depends_on:
-  #     - postgres
-  #   networks:
-  #     - my-network
+    healthcheck:
+      test: "pg_isready -h postgres"
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   migrator:
     build:
       context: .
@@ -60,10 +61,10 @@ services:
       - ./services/core/migrations:/services/migrator/core-migrations
       - ./services/parser/migrations:/services/migrator/parser-migrations
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - my-network
-
 
 volumes:
   db_data:
