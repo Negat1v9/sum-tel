@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	parserv1 "github.com/Negat1v9/sum-tel/services/parser/internal/grpc/proto"
-	"github.com/Negat1v9/sum-tel/services/parser/internal/model"
+	parserv1 "github.com/Negat1v9/sum-tel/services/parser/internal/api/proto"
+	"github.com/Negat1v9/sum-tel/services/parser/internal/domain"
+
 	tgparser "github.com/Negat1v9/sum-tel/services/parser/internal/parser/tgParser"
 	"github.com/Negat1v9/sum-tel/services/parser/internal/store"
+	"github.com/Negat1v9/sum-tel/shared/kafka/producer"
 )
 
 const (
@@ -24,10 +26,12 @@ var (
 type ParserService struct {
 	parser  *tgparser.TgParser
 	storage *store.Store
+
+	rawMsgKafkaProducer *producer.Producer
 }
 
-func NewParserService(parser *tgparser.TgParser, storage *store.Store) *ParserService {
-	return &ParserService{parser: parser, storage: storage}
+func NewParserService(parser *tgparser.TgParser, storage *store.Store, rawMsgKafkaProducer *producer.Producer) *ParserService {
+	return &ParserService{parser: parser, storage: storage, rawMsgKafkaProducer: rawMsgKafkaProducer}
 }
 
 func (s *ParserService) ParseNewChannel(ctx context.Context, channelID string, username string) (*parserv1.NewChannelResponse, error) {
@@ -35,7 +39,7 @@ func (s *ParserService) ParseNewChannel(ctx context.Context, channelID string, u
 	// parse telegram meesage and receive information about it and latest ~12 messasges
 	r, err := s.parser.ParseChannel(ctx, username)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", mn, err)
+		return nil, fmt.Errorf("%s.ParseChannel: %w", mn, err)
 	}
 
 	if len(r.Messages) == 0 {
@@ -60,12 +64,17 @@ func (s *ParserService) ParseNewChannel(ctx context.Context, channelID string, u
 		return nil, err
 	}
 
+	err = s.rawMsgKafkaProducer.SendMessage(ctx, domain.ConvetParsedMessagesToAny(channelID, r.Messages)...)
+	if err != nil {
+		return nil, fmt.Errorf("%s.SendMessage: %w:", mn, err)
+	}
+
 	return &parserv1.NewChannelResponse{
 		Success:     true,
 		Username:    r.Username,
 		Name:        r.Name,
 		Description: r.Description,
-		MsgInterval: int32(calculateParseTime(r.Messages)),
+		MsgInterval: DefaultTimePerMessage,
 	}, nil
 }
 
@@ -88,20 +97,21 @@ func (s *ParserService) ParseMessages(ctx context.Context, channelID string, use
 
 	sleepOnErrTime := time.Second
 	// call on error for not copy it every time then error
-	onErrFn := func() {
-		errorsStack = append(errorsStack, err)
+	onErrFn := func(internalErr error) {
+		errorsStack = append(errorsStack, internalErr)
 		countErr--
 		time.Sleep(sleepOnErrTime)
 	}
+	lastMsgID := latestMsg.TelegramMessageID
 	for {
 		if countErr <= 0 {
-			return nil, fmt.Errorf("%s: %w", mn, errors.Join(errorsStack...))
+			return nil, fmt.Errorf("%s: %v", mn, errors.Join(errorsStack...))
 		}
 		numberIterations++
 		// parse telegram
-		msgs, err := s.parser.ParseMessages(ctx, username, latestMsg.TelegramMessageID)
+		msgs, err := s.parser.ParseMessages(ctx, username, lastMsgID)
 		if err != nil {
-			onErrFn()
+			onErrFn(err)
 			continue
 		}
 		// no more messages
@@ -113,7 +123,7 @@ func (s *ParserService) ParseMessages(ctx context.Context, channelID string, use
 		// save new messages in db
 		tx, err := s.storage.Transaction(ctx)
 		if err != nil {
-			onErrFn()
+			onErrFn(err)
 			continue
 		}
 
@@ -121,18 +131,21 @@ func (s *ParserService) ParseMessages(ctx context.Context, channelID string, use
 		err = s.storage.RawMsgRepo().CreateMessages(ctx, tx, convertToModel(channelID, msgs))
 		if err != nil {
 			tx.Rollback()
-			onErrFn()
+			onErrFn(err)
 		} else {
 			err = tx.Commit()
 			if err != nil {
-				onErrFn()
+				onErrFn(err)
 			}
+		}
+		if len(msgs) > 0 {
+			lastMsgID = msgs[len(msgs)-1].MsgId
 		}
 
 	}
 	return &parserv1.ParseMessagesResponse{
 		Success:     true,
-		MsgInterval: msgsInteval / int32(numberIterations),
+		MsgInterval: DefaultTimePerMessage,
 	}, nil
 }
 
@@ -162,10 +175,10 @@ func calculateParseTime(msgs []tgparser.ParsedMessage) int {
 	return totalDeltaTime / (l - 1) // convert seconds to minutes
 }
 
-func convertToModel(channelID string, msgs []tgparser.ParsedMessage) []model.RawMessage {
-	modelMsgs := make([]model.RawMessage, 0, len(msgs))
+func convertToModel(channelID string, msgs []tgparser.ParsedMessage) []domain.RawMessage {
+	modelMsgs := make([]domain.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
-		modelMsgs = append(modelMsgs, model.NewRawMsg(
+		modelMsgs = append(modelMsgs, domain.NewRawMsg(
 			channelID,
 			msg.Type,
 			msg.MsgId,

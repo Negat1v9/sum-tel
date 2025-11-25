@@ -17,7 +17,7 @@ func main() {
 		// log.Fatalf("failed to connect to database: %w`", err)
 	}
 
-	app := grpcapp.New(&cfg.GrpcServerConfig, db)
+	app := grpcapp.New(cfg, db)
 
 	if err := app.Run(); err != nil {
 		panic(err)

@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	parserv1 "github.com/Negat1v9/sum-tel/services/parser/internal/grpc/proto"
+	parserv1 "github.com/Negat1v9/sum-tel/services/parser/internal/api/proto"
 	"github.com/Negat1v9/sum-tel/services/parser/internal/parser/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

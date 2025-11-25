@@ -32,7 +32,7 @@ type ChannelInfo struct {
 }
 
 const (
-	baseUrl = "https://t.me/"
+	baseUrl = "https://t.me"
 )
 
 type TgParser struct {
@@ -117,7 +117,7 @@ func (p *TgParser) ParseMessages(ctx context.Context, username string, afterMsgI
 
 	// the response looks like a list of divs and is presented as text, with line breaks and " at the end.
 	// we remove all unnecessary characters so that the parser works.
-	clear := bytes.ReplaceAll(body, []byte{'\\'}, []byte{' '})
+	clear := bytes.ReplaceAll(body, []byte{'\\'}, []byte{})
 
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(clear[1 : len(clear)-1]))
 	if err != nil {
@@ -136,30 +136,23 @@ func (p *TgParser) parseMsg(doc *goquery.Document) []ParsedMessage {
 		msg := ParsedMessage{}
 
 		msgContent := s.Find(".tgme_widget_message_text")
-		msgContent.Find(".emoji ").RemoveFiltered("i") // remove only <i> tags with emoji class
-		msgContent.Find("tg-emoji").Remove()           // remove all <tg-emoji> tags
-		msgContent.Find("a").RemoveAttr("onclick")     // remove onclick attributes from links
-
 		msg.Text = msgContent.Text()
 		if msg.Text == "" {
 			// skip messages without text content
 			return
 		}
+		msgContent.Find(".emoji ").RemoveFiltered("i") // remove only <i> tags with emoji class
+		msgContent.Find("tg-emoji").Remove()           // remove all <tg-emoji> tags
+		msgContent.Find("a").RemoveAttr("onclick")     // remove onclick attributes from links
+
 		msg.HtmlText, _ = msgContent.Html()
-		msgLink, ok := s.Find(".tgme_widget_message_footer").Find("a").Attr("href")
+		msgLink, ok := s.Find(".tgme_widget_message").Attr("data-post")
 		if ok {
-			msg.Link = msgLink
+			link := strings.TrimSpace(msgLink)
 			// extract msg id from link
-			msg.MsgId, _ = strconv.ParseInt(msgLink[strings.LastIndex(msgLink, "/")+1:], 10, 64)
+			msg.MsgId, _ = strconv.ParseInt(link[strings.LastIndex(link, "/")+1:], 10, 64)
 		}
 
-		msgPublicationDateTime := s.Find(".tgme_widget_message_footer").Find("time").AttrOr("datetime", "")
-		dateTime, err := time.Parse(time.RFC3339, msgPublicationDateTime)
-		if err != nil {
-			msg.Date = time.Now() // FIXME: what???
-		}
-
-		msg.Date = dateTime
 		msg.Type = "text" // TODO: receive actual type
 
 		msgs = append(msgs, msg)

@@ -18,7 +18,7 @@ const (
 		SELECT id, channel_id, content_type, telegram_message_id, html_text, status, media_urls, message_date, received_at
 		FROM raw_messages
 		WHERE channel_id = $1
-		ORDER BY message_date DESC
+		ORDER BY telegram_message_id DESC
 		LIMIT 1
 	`
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Negat1v9/sum-tel/services/parser/internal/model"
+	"github.com/Negat1v9/sum-tel/services/parser/internal/domain"
 	sqltransaction "github.com/Negat1v9/sum-tel/services/parser/internal/store/sqlTransaction"
 	"github.com/jmoiron/sqlx"
 )
@@ -19,7 +19,7 @@ func NewRawMessageRepository(db *sqlx.DB) *rawMessageRepository {
 }
 
 // create a new message
-func (r *rawMessageRepository) CreateMessages(ctx context.Context, tx sqltransaction.Txx, msgs []model.RawMessage) error {
+func (r *rawMessageRepository) CreateMessages(ctx context.Context, tx sqltransaction.Txx, msgs []domain.RawMessage) error {
 	if len(msgs) == 0 {
 		return nil
 	}
@@ -40,8 +40,8 @@ func (r *rawMessageRepository) CreateMessages(ctx context.Context, tx sqltransac
 }
 
 // return a channel messages
-func (r *rawMessageRepository) GetChannelMessages(ctx context.Context, chID string, limit, offset int64) ([]model.RawMessage, error) {
-	var msgs []model.RawMessage
+func (r *rawMessageRepository) GetChannelMessages(ctx context.Context, chID string, limit, offset int64) ([]domain.RawMessage, error) {
+	var msgs []domain.RawMessage
 	err := r.db.SelectContext(ctx, &msgs, getChannelMessagesQuery, chID, limit, offset)
 	if err != nil {
 		return nil, err
@@ -49,17 +49,17 @@ func (r *rawMessageRepository) GetChannelMessages(ctx context.Context, chID stri
 	return msgs, nil
 }
 
-func (r *rawMessageRepository) GetLatestChannelMessage(ctx context.Context, chID string) (model.RawMessage, error) {
-	var msg model.RawMessage
+func (r *rawMessageRepository) GetLatestChannelMessage(ctx context.Context, chID string) (domain.RawMessage, error) {
+	var msg domain.RawMessage
 	err := r.db.GetContext(ctx, &msg, getLatestChannelMessageQuery, chID)
 	if err != nil {
-		return model.RawMessage{}, err
+		return domain.RawMessage{}, err
 	}
 	return msg, nil
 }
 
-func (r *rawMessageRepository) GetAndProcessedChannelMessages(ctx context.Context, tx sqltransaction.Txx, chID string, limit int64) ([]model.RawMessage, error) {
-	var msgs []model.RawMessage
+func (r *rawMessageRepository) GetAndProcessedChannelMessages(ctx context.Context, tx sqltransaction.Txx, chID string, limit int64) ([]domain.RawMessage, error) {
+	var msgs []domain.RawMessage
 	err := tx.SelectContext(ctx, &msgs, getAndProcessMessagesQuery, chID, limit)
 	if err != nil {
 		return nil, err
