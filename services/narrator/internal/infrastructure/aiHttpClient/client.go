@@ -34,7 +34,7 @@ func NewClient(cfg *config.AiClientCfg, isStreaming bool) *Client {
 
 // sends a request to the AI service to aggregate raw messages into a summarized response
 func (c *Client) DoAggregation(ctx context.Context, msgs []domain.RawMessage) (*domain.AggregationResponse, error) {
-	mn := "Client.DoNarration"
+	mn := "Client.DoAggregation"
 	type Req struct {
 		Messages []domain.RawMessage `json:"messages"`
 	}

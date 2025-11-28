@@ -6,7 +6,6 @@ replace github.com/Negat1v9/sum-tel/shared => ../../shared
 
 require (
 	github.com/Negat1v9/sum-tel/shared v0.0.0-00010101000000-000000000000
-	github.com/google/uuid v1.6.0
 	github.com/segmentio/kafka-go v0.4.49
 )
 

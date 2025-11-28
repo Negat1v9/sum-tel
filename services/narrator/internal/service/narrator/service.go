@@ -83,15 +83,15 @@ func (s *Service) RawMessagesHandler() consumer.ProcFunc {
 			return false
 		}
 
-		s.log.Debugf("result ai: %v", *aggregatedMsgs)
+		// s.log.Debugf("result ai: %v", *aggregatedMsgs)
 
 		// pruducerCtx not block main shutdown process
-		// pruducerCtx, producerCancel := context.WithTimeout(context.Background(), time.Second*30)
-		// defer producerCancel()
+		pruducerCtx, producerCancel := context.WithTimeout(context.Background(), time.Second*30)
+		defer producerCancel()
 		// send aggregated messages to news-aggregator service after LLM proccesing
-		// s.wg.Add(1) // try send aggregated message in a separate goroutine if receive shutdown signal
-		// s.sendAggregatedMessage(pruducerCtx, aggregatedMsgs)
-		// s.wg.Done()
+		s.wg.Add(1) // try send aggregated message in a separate goroutine if receive shutdown signal
+		s.sendAggregatedMessage(pruducerCtx, aggregatedMsgs)
+		s.wg.Done()
 
 		return true
 	}
@@ -99,7 +99,7 @@ func (s *Service) RawMessagesHandler() consumer.ProcFunc {
 
 func (s *Service) sendAggregatedMessage(ctx context.Context, msg *domain.AggregationResponse) error {
 	mn := "Service.SendAggregatedMessage"
-	err := s.newsAggregatorProducer.SendMessage(ctx, domain.ConvertAggregateNewsdResponseToAny(msg.AggregatedNews))
+	err := s.newsAggregatorProducer.SendMessage(ctx, domain.ConvertAggregateNewsdResponseToAny(msg.AggregatedNews)...)
 	if err != nil {
 		s.log.Errorf("%s: failed to send aggregated news message: %v", mn, err)
 		return err

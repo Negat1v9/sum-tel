@@ -8,7 +8,8 @@ COPY services/narrator ./services/narrator
 
 WORKDIR /app/services/narrator
 
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
 RUN go build cmd/main.go
 

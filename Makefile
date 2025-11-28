@@ -9,7 +9,7 @@ gen_proto:
 	echo "Protobuf code generation completed."
 
 up:
-	docker-compose up kafka -d && \
+	docker-compose up --build -d && \
 	docker compose exec -w /opt/kafka/bin kafka sh ./kafka-topics.sh --bootstrap-server localhost:9092 \
 	--create --if-not-exists \
     --topic raw-messages \
@@ -18,8 +18,19 @@ up:
     --config retention.ms=604800000 \
     --config retention.bytes=1073741824 \
     --config cleanup.policy=delete \
+    --config max.message.bytes=10485760 && \
+	docker compose exec -w /opt/kafka/bin kafka sh ./kafka-topics.sh --bootstrap-server localhost:9092 \
+    --create --if-not-exists \
+    --topic news-aggregated \
+    --partitions 2 \
+    --replication-factor 1 \
+    --config retention.ms=604800000 \
+    --config retention.bytes=1073741824 \
+    --config cleanup.policy=delete \
     --config max.message.bytes=10485760
+
 upBuild:
 	docker-compose up -d --build
+
 down:
 	docker-compose down
