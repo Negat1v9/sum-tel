@@ -4,6 +4,7 @@ const (
 	createMessagesQuery = `
 		INSERT INTO raw_messages (channel_id, content_type, telegram_message_id, html_text, status, media_urls, message_date, received_at)
 		VALUES %s
+		ON CONFLICT (channel_id, telegram_message_id) DO NOTHING
 	`
 
 	getChannelMessagesQuery = `

@@ -29,7 +29,7 @@ func New(cfg *config.ParserServiceConfig, db *sqlx.DB) *App {
 
 	tgParser := tgparser.NewTgParser()
 
-	msgsService := service.NewParserService(tgParser, storage.NewStorage(db), rawMsgProducer)
+	msgsService := service.NewParserService(logger, tgParser, storage.NewStorage(db), rawMsgProducer)
 
 	gRPCServer := grpc.NewServer()
 

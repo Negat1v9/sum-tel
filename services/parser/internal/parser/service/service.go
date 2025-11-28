@@ -12,6 +12,7 @@ import (
 	tgparser "github.com/Negat1v9/sum-tel/services/parser/internal/parser/tgParser"
 	"github.com/Negat1v9/sum-tel/services/parser/internal/store"
 	"github.com/Negat1v9/sum-tel/shared/kafka/producer"
+	"github.com/Negat1v9/sum-tel/shared/logger"
 )
 
 const (
@@ -24,14 +25,15 @@ var (
 )
 
 type ParserService struct {
+	log     *logger.Logger
 	parser  *tgparser.TgParser
 	storage *store.Store
 
 	rawMsgKafkaProducer *producer.Producer
 }
 
-func NewParserService(parser *tgparser.TgParser, storage *store.Store, rawMsgKafkaProducer *producer.Producer) *ParserService {
-	return &ParserService{parser: parser, storage: storage, rawMsgKafkaProducer: rawMsgKafkaProducer}
+func NewParserService(log *logger.Logger, parser *tgparser.TgParser, storage *store.Store, rawMsgKafkaProducer *producer.Producer) *ParserService {
+	return &ParserService{log: log, parser: parser, storage: storage, rawMsgKafkaProducer: rawMsgKafkaProducer}
 }
 
 func (s *ParserService) ParseNewChannel(ctx context.Context, channelID string, username string) (*parserv1.NewChannelResponse, error) {
@@ -104,6 +106,8 @@ func (s *ParserService) ParseMessages(ctx context.Context, channelID string, use
 	}
 	lastMsgID := latestMsg.TelegramMessageID
 	for {
+		s.log.Debugf("%s parsing channel %s, lastMessageID: %d", mn, channelID, lastMsgID)
+
 		if countErr <= 0 {
 			return nil, fmt.Errorf("%s: %v", mn, errors.Join(errorsStack...))
 		}
@@ -138,10 +142,8 @@ func (s *ParserService) ParseMessages(ctx context.Context, channelID string, use
 				onErrFn(err)
 			}
 		}
-		if len(msgs) > 0 {
-			lastMsgID = msgs[len(msgs)-1].MsgId
-		}
 
+		lastMsgID = msgs[len(msgs)-1].MsgId
 	}
 	return &parserv1.ParseMessagesResponse{
 		Success:     true,

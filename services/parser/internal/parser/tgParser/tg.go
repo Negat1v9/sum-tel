@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -152,6 +153,12 @@ func (p *TgParser) parseMsg(doc *goquery.Document) []ParsedMessage {
 			// extract msg id from link
 			msg.MsgId, _ = strconv.ParseInt(link[strings.LastIndex(link, "/")+1:], 10, 64)
 		}
+		// if message contain a media files foe each last message id is last media message id
+		s.Find(".tgme_widget_message_grouped_wrap").Find("a").Each(func(i int, s *goquery.Selection) {
+			groupLink, _ := s.Attr("href")
+			msgMediaUrl, _ := url.Parse(groupLink)
+			msg.MsgId, _ = strconv.ParseInt(msgMediaUrl.Path[strings.LastIndex(msgMediaUrl.Path, "/")+1:], 10, 64)
+		})
 
 		msg.Type = "text" // TODO: receive actual type
 
