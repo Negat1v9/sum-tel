@@ -35,7 +35,6 @@ func (s *ChannelService) CreateChannel(ctx context.Context, userID int64, userna
 	username, _ = strings.CutPrefix(username, "@")
 	// check channel exists
 	existsChannel, err := s.store.ChannelRepo().GetByUsername(ctx, username)
-	fmt.Printf("channel is exitst %v, err: %v\n", existsChannel, err)
 	if err == nil {
 		return existsChannel, nil
 	} else if err != sql.ErrNoRows {
@@ -83,7 +82,7 @@ func (s *ChannelService) CreateChannel(ctx context.Context, userID int64, userna
 	// add channel information in db
 	createdChannel, err := s.store.ChannelRepo().Create(
 		dbCtx, tx, model.NewChannel(channelID, username, parsedChannel.Name,
-			parsedChannel.Description, int(parsedChannel.MsgInterval), time.Now()))
+			parsedChannel.Description, int(parsedChannel.GetMsgInterval()), time.Now()))
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +110,7 @@ func (s *ChannelService) UsersSubscriptions(ctx context.Context, userID int64, l
 }
 
 func (s *ChannelService) ChannelsToParse(ctx context.Context, limit, offset int) ([]model.Channel, error) {
-	channels, err := s.store.ChannelRepo().GetUsernamesForParse(ctx, limit, offset)
+	channels, err := s.store.ChannelRepo().GetUsernamesForParse(ctx, 10, limit, offset)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return []model.Channel{}, nil

@@ -11,6 +11,7 @@ type CoreConfig struct {
 	WebConfig
 	GrpcClientConfig
 	PostgresConfig
+	ConsumerConfig
 }
 
 type ParserServiceConfig struct {
@@ -52,6 +53,13 @@ type PostgresConfig struct {
 	DbUser     string
 	DbPassword string
 	DbSslMode  string
+}
+
+type ConsumerConfig struct {
+	Topic      string
+	Broker     string
+	GroupID    string
+	AutoCommit bool
 }
 
 func parseCfg(fileName string) (*viper.Viper, error) {
