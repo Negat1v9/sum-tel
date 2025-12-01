@@ -8,8 +8,8 @@ COPY services/migrator ./services/migrator
 
 WORKDIR /app/services/migrator
 
-RUN go mod download
-
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
 RUN go build -o migrator ./cmd/main.go
 

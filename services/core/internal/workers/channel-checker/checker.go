@@ -57,8 +57,8 @@ func (c *CatcherNews) parseChannel(ch *model.Channel) {
 	// Fetch and parse the channel's messages
 	err := c.chService.ParseChannel(ctx, ch.ID, ch.Username)
 	if err != nil {
-		c.log.Errorf("CatcherNews.parseChannel: Error parsing channel %d: %v", ch.ID, err)
+		c.log.Errorf("CatcherNews.parseChannel: Error parsing channel %s: %v", ch.Username, err)
 		return
 	}
-	c.log.Debugf("CatcherNews.parseChannel: Successfully parsed channel %d", ch.ID)
+	c.log.Debugf("CatcherNews.parseChannel: Successfully parsed channel %s", ch.Username)
 }

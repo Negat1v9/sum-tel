@@ -1,40 +1,52 @@
 package grpcapp
 
 import (
+	"context"
 	"fmt"
-	"log/slog"
 	"net"
-	"os"
 
+	server "github.com/Negat1v9/sum-tel/services/parser/internal/api/grpc"
 	"github.com/Negat1v9/sum-tel/services/parser/internal/parser/service"
 	tgparser "github.com/Negat1v9/sum-tel/services/parser/internal/parser/tgParser"
-	"github.com/Negat1v9/sum-tel/services/parser/internal/server"
 	storage "github.com/Negat1v9/sum-tel/services/parser/internal/store"
+	proccessrawmessage "github.com/Negat1v9/sum-tel/services/parser/internal/workers/proccessRawMessage"
 	"github.com/Negat1v9/sum-tel/shared/config"
+	"github.com/Negat1v9/sum-tel/shared/kafka/producer"
+	"github.com/Negat1v9/sum-tel/shared/logger"
 	"github.com/jmoiron/sqlx"
 	"google.golang.org/grpc"
 )
 
 type App struct {
-	log        *slog.Logger
+	log        *logger.Logger
 	gRPCServer *grpc.Server
 	port       int
 }
 
-func New(cfg *config.GrpcServerConfig, db *sqlx.DB) *App {
+func New(cfg *config.ParserServiceConfig, db *sqlx.DB) *App {
+	shutDownCtx := context.TODO()
+
+	logger := logger.NewLogger(cfg.AppConfig.Env)
+
+	rawMsgProducer := producer.NewProducer(logger, []string{cfg.RawMessageProducerConfig.Broker}, cfg.RawMessageProducerConfig.BatchSize, cfg.RawMessageProducerConfig.Topic)
 
 	tgParser := tgparser.NewTgParser()
 
-	msgsService := service.NewParserService(tgParser, storage.NewStorage(db))
+	msgsService := service.NewParserService(logger, tgParser, storage.NewStorage(db), rawMsgProducer)
+
+	rawMessageWorker := proccessrawmessage.NewWorker(logger, msgsService)
+
+	// check for new raw messages every minute and send to narration processing with kafka producer
+	go rawMessageWorker.Start(shutDownCtx)
 
 	gRPCServer := grpc.NewServer()
 
 	server.Register(gRPCServer, msgsService)
 
 	return &App{
-		log:        slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})),
+		log:        logger,
 		gRPCServer: gRPCServer,
-		port:       cfg.GPRPCPort,
+		port:       cfg.GrpcServerConfig.GPRPCPort,
 	}
 }
 
@@ -46,7 +58,7 @@ func (a *App) Run() error {
 		return fmt.Errorf("grpcapp.Run: %w", err)
 	}
 
-	a.log.Info("gRPC server started", slog.Int("port", a.port))
+	a.log.Infof("gRPC server started port %d", a.port)
 
 	if err := a.gRPCServer.Serve(l); err != nil {
 		return fmt.Errorf("grpcapp.Run: %w", err)
@@ -57,6 +69,6 @@ func (a *App) Run() error {
 
 // stop grpc server
 func (a *App) Stop() {
-	a.log.Info("gRPC server stopped", slog.Int("port", a.port))
+	a.log.Infof("gRPC server stopped")
 	a.gRPCServer.GracefulStop()
 }

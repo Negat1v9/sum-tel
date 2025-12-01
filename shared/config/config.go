@@ -11,15 +11,24 @@ type CoreConfig struct {
 	WebConfig
 	GrpcClientConfig
 	PostgresConfig
+	ConsumerConfig
 }
 
 type ParserServiceConfig struct {
+	AppConfig
 	GrpcServerConfig
 	PostgresConfig
+	RawMessageProducerConfig
 }
 
 type GrpcServerConfig struct {
 	GPRPCPort int
+}
+
+type RawMessageProducerConfig struct {
+	Topic     string
+	Broker    string
+	BatchSize int
 }
 
 type AppConfig struct {
@@ -44,6 +53,13 @@ type PostgresConfig struct {
 	DbUser     string
 	DbPassword string
 	DbSslMode  string
+}
+
+type ConsumerConfig struct {
+	Topic      string
+	Broker     string
+	GroupID    string
+	AutoCommit bool
 }
 
 func parseCfg(fileName string) (*viper.Viper, error) {
@@ -79,6 +95,45 @@ func LoadParserConfig(fileName string) (*ParserServiceConfig, error) {
 		return nil, err
 	}
 	var cfg *ParserServiceConfig
+	if err := v.Unmarshal(&cfg); err != nil {
+		return nil, err
+	}
+	return cfg, nil
+}
+
+type NarratorConfig struct {
+	AppConfig
+	RawMessageConsumerCfg
+	NarrationProducerCfg
+	AiClientCfg
+}
+
+type RawMessageConsumerCfg struct {
+	Topic      string
+	Broker     string
+	GroupID    string
+	AutoCommit bool
+}
+
+type NarrationProducerCfg struct {
+	Topic     string
+	Broker    string
+	BatchSize int
+}
+
+type AiClientCfg struct {
+	BaseUrl      string
+	Token        string
+	Model        string
+	SystemPrompt string
+}
+
+func LoadNarratorConfig(fileName string) (*NarratorConfig, error) {
+	v, err := parseCfg(fileName)
+	if err != nil {
+		return nil, err
+	}
+	var cfg *NarratorConfig
 	if err := v.Unmarshal(&cfg); err != nil {
 		return nil, err
 	}

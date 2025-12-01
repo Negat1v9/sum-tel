@@ -8,7 +8,8 @@ COPY services/parser ./services/parser
 
 WORKDIR /app/services/parser
 
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
 RUN go build -o parser cmd/main.go
 

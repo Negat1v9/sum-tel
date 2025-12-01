@@ -5,10 +5,12 @@ import (
 
 	channelservice "github.com/Negat1v9/sum-tel/services/core/internal/channel/service"
 	grpcclient "github.com/Negat1v9/sum-tel/services/core/internal/grpc/client"
+	newsservice "github.com/Negat1v9/sum-tel/services/core/internal/news/service"
 	"github.com/Negat1v9/sum-tel/services/core/internal/server"
 	"github.com/Negat1v9/sum-tel/services/core/internal/store"
 	channelchecker "github.com/Negat1v9/sum-tel/services/core/internal/workers/channel-checker"
 	"github.com/Negat1v9/sum-tel/shared/config"
+	"github.com/Negat1v9/sum-tel/shared/kafka/consumer"
 	"github.com/Negat1v9/sum-tel/shared/logger"
 	"github.com/Negat1v9/sum-tel/shared/postgres"
 )
@@ -41,8 +43,16 @@ func (a *App) Run() error {
 		return err
 	}
 
+	aggregatedNewsConsumer := consumer.NewConsumer(a.log, []string{a.cfg.ConsumerConfig.Broker}, a.cfg.ConsumerConfig.Topic, a.cfg.ConsumerConfig.GroupID, false)
 	// services:
 	channelService := channelservice.NewChannelService(storage, tgParsergRPCClient)
+
+	newsService := newsservice.NewNewsService(a.log, storage, aggregatedNewsConsumer)
+
+	go func() {
+		a.log.Infof("start aggregatedNewsConsumer processing")
+		aggregatedNewsConsumer.ProcessMessages(context.TODO(), newsService.ProcessNewsHandler(), 2)
+	}()
 
 	server := server.New(a.cfg, a.log)
 	server.MapHandlers(channelService)

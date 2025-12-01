@@ -65,12 +65,14 @@ func (r *ChannelRepository) GetAll(ctx context.Context, limit, offset int) ([]mo
 	return channels, nil
 }
 
-func (r *ChannelRepository) GetUsernamesForParse(ctx context.Context, limit, offset int) ([]model.Channel, error) {
+// avgMsgs - average number of messages parsed per interval
+func (r *ChannelRepository) GetUsernamesForParse(ctx context.Context, avgMsgs int, limit, offset int) ([]model.Channel, error) {
 	channels := []model.Channel{}
-	err := r.db.SelectContext(ctx, &channels, getUsernamesForParseQuery, limit, offset)
+	err := r.db.SelectContext(ctx, &channels, getUsernamesForParseQuery, limit, offset, avgMsgs)
 	if err != nil {
 		return nil, err
 	}
+	// JUST EDIT FOR TESTING DOCKDER MUGAGAGAGA
 
 	return channels, nil
 }

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/Negat1v9/sum-tel/services/parser/internal/model"
+	"github.com/Negat1v9/sum-tel/services/parser/internal/domain"
 	sqltransaction "github.com/Negat1v9/sum-tel/services/parser/internal/store/sqlTransaction"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -29,7 +29,7 @@ func TestCreateMessages(t *testing.T) {
 		created2 := time.Now()
 		receivedAt1 := time.Now()
 		receivedAt2 := time.Now()
-		msgs := []model.RawMessage{{ChannelID: "ch-1", ContentType: "text", TelegramMessageID: 1, HTMLText: "<a>text</a>", Status: "new", MediaURLs: pq.StringArray{"t1"}, MessageDate: created1, ReceivedAt: receivedAt1},
+		msgs := []domain.RawMessage{{ChannelID: "ch-1", ContentType: "text", TelegramMessageID: 1, HTMLText: "<a>text</a>", Status: "new", MediaURLs: pq.StringArray{"t1"}, MessageDate: created1, ReceivedAt: receivedAt1},
 			{ChannelID: "ch-2", ContentType: "text", TelegramMessageID: 2, HTMLText: "<a>text</a>", Status: "new", MessageDate: created2, ReceivedAt: receivedAt2}}
 		// rows := sqlmock.NewRows([]string{"channel_id", "content_type", "telegram_message_id", "html_text", "status", "media_urls", "message_date", "received_at"}).
 		// 	AddRow("ch-1", "text", 1, "<a>text</a>", "new", pq.StringArray{}, time.Now(), time.Now()).

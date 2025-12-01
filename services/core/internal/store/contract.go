@@ -7,6 +7,7 @@ import (
 
 	"github.com/Negat1v9/sum-tel/services/core/internal/model"
 	"github.com/Negat1v9/sum-tel/services/core/internal/store/channel_repository"
+	newsrepository "github.com/Negat1v9/sum-tel/services/core/internal/store/news_repository"
 	"github.com/Negat1v9/sum-tel/services/core/internal/store/subscription_repository"
 	"github.com/Negat1v9/sum-tel/services/core/internal/store/user_repository"
 	"github.com/google/uuid"
@@ -26,7 +27,7 @@ type ChannelRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Channel, error)
 	GetByUsername(ctx context.Context, username string) (*model.Channel, error)
 	GetAll(ctx context.Context, limit, offset int) ([]model.Channel, error)
-	GetUsernamesForParse(ctx context.Context, limit, offset int) ([]model.Channel, error)
+	GetUsernamesForParse(ctx context.Context, avgMsgs int, limit, offset int) ([]model.Channel, error)
 	Update(ctx context.Context, channel *model.Channel) (*model.Channel, error)
 	Delete(ctx context.Context, id uuid.UUID) (*model.Channel, error)
 }
@@ -40,12 +41,24 @@ type UserChannelSubscriptionRepository interface {
 	GetByUserID(ctx context.Context, userID int64, limit, offset int) ([]model.UserSubscription, error)
 }
 
+type NewsRepository interface {
+	Create(ctx context.Context, tx sqltransaction.Txx, news *model.News) error
+	GetByID(ctx context.Context, id uuid.UUID) (*model.News, error)
+	GetAll(ctx context.Context, limit, offset int) ([]model.News, error)
+	Delete(ctx context.Context, id uuid.UUID) (*model.News, error)
+	CreateNewsSource(ctx context.Context, tx sqltransaction.Txx, source *model.NewsSource) error
+	CreateNewsSources(ctx context.Context, tx sqltransaction.Txx, sources []model.NewsSource) error
+	DeleteNewsSource(ctx context.Context, id int) (*model.NewsSource, error)
+	DeleteNewsSourcesByNewsID(ctx context.Context, newsID uuid.UUID) error
+}
+
 type Storage struct {
 	db          *sqlx.DB
 	sqlTx       sqltransaction.SqlTx
 	userRepo    UserRepository
 	channelRepo ChannelRepository
 	subRepo     UserChannelSubscriptionRepository
+	newsRepo    NewsRepository
 }
 
 func NewStorage(db *sqlx.DB) *Storage {
@@ -55,6 +68,7 @@ func NewStorage(db *sqlx.DB) *Storage {
 		userRepo:    user_repository.NewUserRepository(db),
 		channelRepo: channel_repository.NewChannelRepository(db),
 		subRepo:     subscription_repository.NewUserSubscriptionRepository(db),
+		newsRepo:    newsrepository.NewNewsRepository(db),
 	}
 }
 
@@ -77,6 +91,13 @@ func (s *Storage) SubRepo() UserChannelSubscriptionRepository {
 		s.subRepo = subscription_repository.NewUserSubscriptionRepository(s.db)
 	}
 	return s.subRepo
+}
+
+func (s *Storage) NewsRepo() NewsRepository {
+	if s.newsRepo == nil {
+		s.newsRepo = newsrepository.NewNewsRepository(s.db)
+	}
+	return s.newsRepo
 }
 
 func (s *Storage) Transaction(ctx context.Context) (sqltransaction.Txx, error) {

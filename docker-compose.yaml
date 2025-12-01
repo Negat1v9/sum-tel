@@ -33,6 +33,17 @@ services:
     volumes:
       - ./shared/config:/app/config
 
+  narrator:
+    build:
+      context: .
+      dockerfile: ./services/narrator/cmd/Dockerfile
+    depends_on:
+      - kafka
+    networks:
+      - my-network
+    volumes:
+      - ./shared/config:/app/config
+
   postgres:
     image: postgres:18.0-alpine3.22
     environment:
@@ -52,6 +63,41 @@ services:
       timeout: 5s
       retries: 5
 
+  kafka:
+    image: apache/kafka:latest
+    hostname: kafka
+    ports:
+      - 9092:9092
+      - 9093:9093
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: controller,broker
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - my-network
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop:latest
+    ports:
+      - 9000:9000
+    environment:
+      KAFKA_BROKERCONNECT: kafka:9092
+      JVM_OPTS: "-Xms32M -Xmx64M"
+      SERVER_SERVLET_CONTEXTPATH: "/"
+    depends_on:
+      - kafka
+    networks:
+      - my-network
+
   migrator:
     build:
       context: .
@@ -68,6 +114,7 @@ services:
 
 volumes:
   db_data:
+  kafka_data:
 networks:
   my-network:
     driver: bridge
