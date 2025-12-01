@@ -14,7 +14,7 @@ type RawMsgRepository interface {
 	GetLatestChannelMessage(ctx context.Context, chID string) (domain.RawMessage, error)
 	GetChannelMessages(ctx context.Context, chID string, limit, offset int64) ([]domain.RawMessage, error)
 	// return messages sorted ASC on RawMessage.MessageDate and update status this messages
-	GetAndProcessedChannelMessages(ctx context.Context, tx sqltransaction.Txx, chID string, limit int64) ([]domain.RawMessage, error)
+	GetAndProcessedChannelMessages(ctx context.Context, tx sqltransaction.Txx, limit int) ([]domain.RawMessage, error)
 }
 
 type Store struct {

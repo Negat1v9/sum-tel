@@ -1,6 +1,7 @@
 package grpcapp
 
 import (
+	"context"
 	"fmt"
 	"net"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/Negat1v9/sum-tel/services/parser/internal/parser/service"
 	tgparser "github.com/Negat1v9/sum-tel/services/parser/internal/parser/tgParser"
 	storage "github.com/Negat1v9/sum-tel/services/parser/internal/store"
+	proccessrawmessage "github.com/Negat1v9/sum-tel/services/parser/internal/workers/proccessRawMessage"
 	"github.com/Negat1v9/sum-tel/shared/config"
 	"github.com/Negat1v9/sum-tel/shared/kafka/producer"
 	"github.com/Negat1v9/sum-tel/shared/logger"
@@ -22,6 +24,7 @@ type App struct {
 }
 
 func New(cfg *config.ParserServiceConfig, db *sqlx.DB) *App {
+	shutDownCtx := context.TODO()
 
 	logger := logger.NewLogger(cfg.AppConfig.Env)
 
@@ -30,6 +33,11 @@ func New(cfg *config.ParserServiceConfig, db *sqlx.DB) *App {
 	tgParser := tgparser.NewTgParser()
 
 	msgsService := service.NewParserService(logger, tgParser, storage.NewStorage(db), rawMsgProducer)
+
+	rawMessageWorker := proccessrawmessage.NewWorker(logger, msgsService)
+
+	// check for new raw messages every minute and send to narration processing with kafka producer
+	go rawMessageWorker.Start(shutDownCtx)
 
 	gRPCServer := grpc.NewServer()
 
@@ -61,6 +69,6 @@ func (a *App) Run() error {
 
 // stop grpc server
 func (a *App) Stop() {
-	a.log.Infof("gRPC server stopped: port", a.port)
+	a.log.Infof("gRPC server stopped")
 	a.gRPCServer.GracefulStop()
 }

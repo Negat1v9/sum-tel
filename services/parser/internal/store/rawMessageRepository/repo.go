@@ -58,9 +58,9 @@ func (r *rawMessageRepository) GetLatestChannelMessage(ctx context.Context, chID
 	return msg, nil
 }
 
-func (r *rawMessageRepository) GetAndProcessedChannelMessages(ctx context.Context, tx sqltransaction.Txx, chID string, limit int64) ([]domain.RawMessage, error) {
+func (r *rawMessageRepository) GetAndProcessedChannelMessages(ctx context.Context, tx sqltransaction.Txx, limit int) ([]domain.RawMessage, error) {
 	var msgs []domain.RawMessage
-	err := tx.SelectContext(ctx, &msgs, getAndProcessMessagesQuery, chID, limit)
+	err := tx.SelectContext(ctx, &msgs, getAndProcessMessagesQuery, limit)
 	if err != nil {
 		return nil, err
 	}

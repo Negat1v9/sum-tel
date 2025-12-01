@@ -22,6 +22,7 @@ const (
 var (
 	// error on parsing new channel and it not have any messages
 	ErrChannelNoMessages = errors.New("channel has no messages")
+	ErrNoRawMessages     = errors.New("no raw messages to process")
 )
 
 type ParserService struct {
@@ -149,6 +150,32 @@ func (s *ParserService) ParseMessages(ctx context.Context, channelID string, use
 		Success:     true,
 		MsgInterval: DefaultTimePerMessage,
 	}, nil
+}
+
+func (s *ParserService) ProccessRawMessages(ctx context.Context, limit int) error {
+	mn := "ParserService.ProccessRawMessages"
+	tx, err := s.storage.Transaction(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", mn, err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	msgs, err := s.storage.RawMsgRepo().GetAndProcessedChannelMessages(ctx, tx, limit)
+	if err != nil {
+		return fmt.Errorf("%s: %w", mn, err)
+	}
+
+	if len(msgs) == 0 {
+		return fmt.Errorf("%s: %w", mn, ErrNoRawMessages)
+	}
+
+	return s.rawMsgKafkaProducer.SendMessage(ctx, domain.ConvertRawMessagesToAny(msgs)...)
 }
 
 // calculateParseTime calculates the time required to parse messages based on their content in minutes

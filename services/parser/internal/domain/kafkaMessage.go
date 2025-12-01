@@ -19,3 +19,16 @@ func ConvetParsedMessagesToAny(chID string, msgs []tgparser.ParsedMessage) []any
 	}
 	return r
 }
+
+// convert RawMessage slice to any slice with KafkaRawMessage
+func ConvertRawMessagesToAny(msgs []RawMessage) []any {
+	r := make([]any, 0, len(msgs))
+	for _, m := range msgs {
+		r = append(r, KafkaRawMessage{
+			ChannelID: m.ChannelID,
+			MessageID: m.TelegramMessageID,
+			Text:      tgparser.CleanMessageText(m.HTMLText),
+		})
+	}
+	return r
+}

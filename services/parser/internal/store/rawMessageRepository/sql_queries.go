@@ -29,13 +29,13 @@ const (
 			SET status = 'processed'
 			WHERE id IN (
 				SELECT id FROM raw_messages
-				WHERE channel_id = $1 AND status = 'new'
-				ORDER BY message_date ASC
-				LIMIT $2
+				WHERE status = 'new'
+				ORDER BY telegram_message_id ASC
+				LIMIT $1
 			)
 			RETURNING id, channel_id, content_type, telegram_message_id, html_text, status, media_urls, message_date, received_at
 		)
-		SELECT * FROM updated ORDER BY message_date ASC
+		SELECT * FROM updated ORDER BY telegram_message_id ASC
 	`
 
 	updateMessagesStatusQuery = `
