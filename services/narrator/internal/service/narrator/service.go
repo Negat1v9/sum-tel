@@ -83,8 +83,6 @@ func (s *Service) RawMessagesHandler() consumer.ProcFunc {
 			return false
 		}
 
-		// s.log.Debugf("result ai: %v", *aggregatedMsgs)
-
 		// pruducerCtx not block main shutdown process
 		pruducerCtx, producerCancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer producerCancel()

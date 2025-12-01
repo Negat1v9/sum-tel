@@ -36,7 +36,7 @@ func main() {
 	aiClient := aihttpclient.NewClient(&cfg.AiClientCfg, false)
 	service := narrator.NewService(log, aiClient, rawMsgConsumer, AggregatorProducer, wg)
 
-	go rawMsgConsumer.ProcessMessages(shutdown, service.RawMessagesHandler(), 10)
+	go rawMsgConsumer.ProcessMessages(shutdown, service.RawMessagesHandler(), 15)
 
 	<-shutdown.Done()
 	log.Infof("Shutting down narrator service...")
