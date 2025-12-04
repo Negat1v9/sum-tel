@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Negat1v9/sum-tel/shared/sqltransaction"
 
@@ -12,6 +13,10 @@ import (
 	"github.com/Negat1v9/sum-tel/services/core/internal/store/user_repository"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+)
+
+var (
+	ErrNoUserSubscriptions = errors.New("no user subscriptions found")
 )
 
 type UserRepository interface {
@@ -35,10 +40,9 @@ type ChannelRepository interface {
 type UserChannelSubscriptionRepository interface {
 	Create(ctx context.Context, tx sqltransaction.Txx, sub *model.UserSubscription) (*model.UserSubscription, error)
 	GetByID(ctx context.Context, id int64) (*model.UserSubscription, error)
-	GetAll(ctx context.Context, limit, offset int) ([]model.UserSubscription, error)
-	Update(ctx context.Context, sub *model.UserSubscription) (*model.UserSubscription, error)
+	GetByUserAndChannelID(ctx context.Context, userID int64, channelID uuid.UUID) (*model.UserSubscription, error)
 	Delete(ctx context.Context, id int64) (*model.UserSubscription, error)
-	GetByUserID(ctx context.Context, userID int64, limit, offset int) ([]model.UserSubscription, error)
+	GetByUserID(ctx context.Context, userID int64, limit, offset int) ([]model.UserSubscriptionWithChannel, error)
 }
 
 type NewsRepository interface {

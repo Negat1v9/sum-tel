@@ -12,6 +12,11 @@ import (
 	"github.com/Negat1v9/sum-tel/shared/logger"
 )
 
+const (
+	responseDataNameChannel      = "channel"
+	responseDataNameSubscription = "subscription"
+)
+
 type ChannelHandler struct {
 	log *logger.Logger
 	cfg *config.CoreConfig
@@ -44,7 +49,7 @@ func (h *ChannelHandler) CreateChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJsonResponse(w, http.StatusCreated, createdChannel)
+	utils.WriteJsonResponse(w, responseDataNameChannel, http.StatusCreated, createdChannel)
 }
 
 func (h *ChannelHandler) GetChannel(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +69,7 @@ func (h *ChannelHandler) GetChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJsonResponse(w, http.StatusOK, channel)
+	utils.WriteJsonResponse(w, responseDataNameChannel, http.StatusOK, channel)
 }
 
 func (h *ChannelHandler) SubscribeChannel(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +91,7 @@ func (h *ChannelHandler) SubscribeChannel(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	utils.WriteJsonResponse(w, http.StatusOK, subscription)
+	utils.WriteJsonResponse(w, responseDataNameSubscription, http.StatusCreated, subscription)
 }
 
 func (h *ChannelHandler) GetSubscriptions(w http.ResponseWriter, r *http.Request) {
@@ -103,5 +108,5 @@ func (h *ChannelHandler) GetSubscriptions(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	utils.WriteJsonResponse(w, http.StatusOK, subscriptions)
+	utils.WriteJsonResponse(w, responseDataNameChannel, http.StatusOK, subscriptions)
 }

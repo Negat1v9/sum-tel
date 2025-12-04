@@ -1,21 +1,20 @@
 package model
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type Channel struct {
-	ID            uuid.UUID      `db:"id"`
-	Username      string         `db:"username"`
-	Title         string         `db:"title"`
-	Description   sql.NullString `db:"description"`
-	ParseInterval int            `db:"parse_interval"`
-	LastParsedAt  sql.NullTime   `db:"last_parsed_at"`
-	CreatedAt     time.Time      `db:"created_at"`
-	UpdatedAt     time.Time      `db:"updated_at"`
+	ID            uuid.UUID `db:"id" json:"id"`
+	Username      string    `db:"username" json:"username"`
+	Title         string    `db:"title" json:"title"`
+	Description   string    `db:"description" json:"description,omitempty"`
+	ParseInterval int       `db:"parse_interval" json:"-"`
+	LastParsedAt  time.Time `db:"last_parsed_at" json:"-"`
+	CreatedAt     time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt     time.Time `db:"updated_at" json:"updated_at"`
 }
 
 type ChannelMessages struct {
@@ -33,9 +32,9 @@ func NewChannel(id uuid.UUID, username, title, description string, parseInterval
 		ID:            id,
 		Username:      username,
 		Title:         title,
-		Description:   sql.NullString{String: description, Valid: description != ""},
+		Description:   description,
 		ParseInterval: parseInterval,
-		LastParsedAt:  sql.NullTime{Valid: false},
+		LastParsedAt:  time.Now(),
 		CreatedAt:     createdAt,
 		UpdatedAt:     createdAt,
 	}
