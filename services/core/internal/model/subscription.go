@@ -18,6 +18,11 @@ type UserSubscriptionWithChannel struct {
 	Channel Channel `json:"channel"`
 }
 
+type UserSubscriptionWithChannelList struct {
+	TotalRecords     int                           `json:"total_records"`
+	UserSubscriptios []UserSubscriptionWithChannel `json:"subscriptions"`
+}
+
 func NewSub(userID int64, channelID uuid.UUID) *UserSubscription {
 	return &UserSubscription{
 		UserID:       userID,

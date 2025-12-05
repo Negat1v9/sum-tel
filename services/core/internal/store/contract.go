@@ -42,7 +42,7 @@ type UserChannelSubscriptionRepository interface {
 	GetByID(ctx context.Context, id int64) (*model.UserSubscription, error)
 	GetByUserAndChannelID(ctx context.Context, userID int64, channelID uuid.UUID) (*model.UserSubscription, error)
 	Delete(ctx context.Context, id int64) (*model.UserSubscription, error)
-	GetByUserID(ctx context.Context, userID int64, limit, offset int) ([]model.UserSubscriptionWithChannel, error)
+	GetByUserID(ctx context.Context, userID int64, limit, offset int) (*model.UserSubscriptionWithChannelList, error)
 }
 
 type NewsRepository interface {

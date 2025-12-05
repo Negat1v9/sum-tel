@@ -9,9 +9,7 @@ COPY services/core ./services/core
 WORKDIR /app/services/core
 
 RUN --mount=type=cache,target=/go/pkg/mod \
-    go mod download
-
-RUN go build -o api cmd/main.go
+    go build -o api cmd/main.go
 
 FROM alpine:3.22.2
 

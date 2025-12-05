@@ -52,7 +52,16 @@ func (r *UserSubscriptionRepository) GetByID(ctx context.Context, id int64) (*mo
 	return sub, nil
 }
 
-func (r *UserSubscriptionRepository) GetByUserID(ctx context.Context, userID int64, limit, offset int) ([]model.UserSubscriptionWithChannel, error) {
+func (r *UserSubscriptionRepository) GetByUserID(ctx context.Context, userID int64, limit, offset int) (*model.UserSubscriptionWithChannelList, error) {
+	var total int
+	err := r.db.SelectContext(ctx, &total, countAllUserSubscriptionsDQuery, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if total == 0 {
+		return &model.UserSubscriptionWithChannelList{TotalRecords: total}, nil
+	}
 
 	rows, err := r.db.QueryxContext(ctx, getSubscriptionsByUserIDQuery, userID, limit, offset)
 	if err != nil {
@@ -79,7 +88,10 @@ func (r *UserSubscriptionRepository) GetByUserID(ctx context.Context, userID int
 		return nil, rows.Err()
 	}
 
-	return subsInfo, nil
+	return &model.UserSubscriptionWithChannelList{
+		TotalRecords:     total,
+		UserSubscriptios: subsInfo,
+	}, nil
 }
 
 func (r *UserSubscriptionRepository) Delete(ctx context.Context, id int64) (*model.UserSubscription, error) {

@@ -142,7 +142,7 @@ func (s *ChannelService) SubscribeChannel(ctx context.Context, userID int64, cha
 }
 
 // get all user subscriptions
-func (s *ChannelService) UsersSubscriptions(ctx context.Context, userID int64, limit, offset int) ([]model.UserSubscriptionWithChannel, error) {
+func (s *ChannelService) UsersSubscriptions(ctx context.Context, userID int64, limit, offset int) (*model.UserSubscriptionWithChannelList, error) {
 	return s.store.SubRepo().GetByUserID(ctx, userID, limit, offset)
 }
 

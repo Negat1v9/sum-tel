@@ -100,13 +100,14 @@ func (h *ChannelHandler) GetSubscriptions(w http.ResponseWriter, r *http.Request
 
 	userID := r.Context().Value(middleware.CtxUserIDKey).(int64)
 
-	// TODO: add pagination
-	subscriptions, err := h.s.UsersSubscriptions(ctx, userID, 20, 0)
+	v := r.URL.Query()
+
+	subscriptions, err := h.s.UsersSubscriptions(ctx, userID, utils.GetLimitParam(v, 30), utils.GetOffset(v))
 	if err != nil {
 		utils.LogResponseErr(r, h.log, err)
 		utils.WriteErrResponse(w, err)
 		return
 	}
 
-	utils.WriteJsonResponse(w, responseDataNameChannel, http.StatusOK, subscriptions)
+	utils.WriteJsonResponse(w, "", http.StatusOK, subscriptions)
 }
