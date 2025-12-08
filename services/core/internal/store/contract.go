@@ -53,6 +53,7 @@ type NewsRepository interface {
 	Delete(ctx context.Context, id uuid.UUID) (*model.News, error)
 	CreateNewsSource(ctx context.Context, tx sqltransaction.Txx, source *model.NewsSource) error
 	CreateNewsSources(ctx context.Context, tx sqltransaction.Txx, sources []model.NewsSource) error
+	GetNewsSourcesByNewsID(ctx context.Context, newsID uuid.UUID) ([]model.NewsSource, error)
 }
 
 type Storage struct {

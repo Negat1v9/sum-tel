@@ -50,5 +50,17 @@ func (h *NewsHandler) News(w http.ResponseWriter, r *http.Request) {
 
 // retrun list of news sources from parser service by newsID
 func (h *NewsHandler) NewsSources(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("not implemented"))
+	ctx, cancel := context.WithTimeout(r.Context(), time.Second*time.Duration(h.cfg.WebConfig.ReadTimeout))
+	defer cancel()
+
+	newsID := r.PathValue("id")
+
+	newsList, err := h.s.NewsSourcesInfo(ctx, newsID)
+	if err != nil {
+		utils.LogResponseErr(r, h.log, err)
+		utils.WriteErrResponse(w, err)
+		return
+	}
+
+	utils.WriteJsonResponse(w, responseDataNameNews, 200, newsList)
 }

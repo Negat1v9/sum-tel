@@ -50,4 +50,11 @@ const (
 		INSERT INTO news_sources (news_id, message_id, channel_id)
 		VALUES %s
 	`
+
+	getNewsSourcesByNewsIDQuery = `
+			SELECT ns.id, ns.message_id, ns.news_id, ns.channel_id, c.username AS channel_name
+				FROM news_sources ns
+			JOIN channels c ON c.id = ns.channel_id
+			WHERE news_id = $1
+	`
 )

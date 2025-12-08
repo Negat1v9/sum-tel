@@ -44,6 +44,11 @@ func (c *TgParserClient) ParseMessages(ctx context.Context, req *parserv1.ParseM
 	return c.client.ParseMessages(ctx, req)
 }
 
+func (c *TgParserClient) GetNewsSources(ctx context.Context, req *parserv1.NewsSourcesRequest) (*parserv1.NewsSourcesResponse, error) {
+	return c.client.NewsSources(ctx, req)
+
+}
+
 // Close closes the gRPC connection
 func (c *TgParserClient) Close() error {
 	c.closed = true

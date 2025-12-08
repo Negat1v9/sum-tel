@@ -6,11 +6,14 @@ import (
 	"fmt"
 	"time"
 
+	grpcclient "github.com/Negat1v9/sum-tel/services/core/internal/grpc/client"
+	parserv1 "github.com/Negat1v9/sum-tel/services/core/internal/grpc/proto"
 	"github.com/Negat1v9/sum-tel/services/core/internal/model"
 	"github.com/Negat1v9/sum-tel/services/core/internal/store"
 	"github.com/Negat1v9/sum-tel/shared/kafka/consumer"
 	"github.com/Negat1v9/sum-tel/shared/logger"
 	"github.com/Negat1v9/sum-tel/shared/sqltransaction"
+	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -18,13 +21,15 @@ type NewsService struct {
 	log          *logger.Logger
 	store        *store.Storage
 	newsConsumer *consumer.Consumer
+	grpcClient   *grpcclient.TgParserClient
 }
 
-func NewNewsService(log *logger.Logger, store *store.Storage, newsConsumer *consumer.Consumer) *NewsService {
+func NewNewsService(log *logger.Logger, store *store.Storage, newsConsumer *consumer.Consumer, grpcClient *grpcclient.TgParserClient) *NewsService {
 	return &NewsService{
 		log:          log,
 		store:        store,
 		newsConsumer: newsConsumer,
+		grpcClient:   grpcClient,
 	}
 }
 
@@ -37,6 +42,32 @@ func (s *NewsService) News(ctx context.Context, userID int, limit, offset int) (
 	}
 
 	return userNews, nil
+}
+
+// full info about news sources by news id: text, link, published at, etc
+func (s *NewsService) NewsSourcesInfo(ctx context.Context, sNewsID string) (*model.NewsSourcesListResponse, error) {
+	mn := "NewsService.NewsSourcesInfo"
+	newsID, err := uuid.Parse(sNewsID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", mn, err)
+	}
+
+	newsSources, err := s.store.NewsRepo().GetNewsSourcesByNewsID(ctx, newsID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", mn, err)
+	}
+
+	sourceRawMessages, err := s.grpcClient.GetNewsSources(ctx, &parserv1.NewsSourcesRequest{
+		Filters: convertSourcesToGrpcFilters(newsSources),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", mn, err)
+	}
+
+	return &model.NewsSourcesListResponse{
+		NewsID:  sNewsID,
+		Sources: model.ClearGrpcNewsSources(sourceRawMessages.Messages),
+	}, nil
 }
 
 // proccess news from broker kafka save to db
@@ -113,4 +144,16 @@ func (s *NewsService) saveWithRetrys(ctx context.Context, newNews *model.News, s
 	}
 
 	return nil
+}
+
+func convertSourcesToGrpcFilters(sources []model.NewsSource) []*parserv1.FiltersRawMessages {
+	grpcSources := make([]*parserv1.FiltersRawMessages, 0, len(sources))
+	for _, s := range sources {
+		grpcSources = append(grpcSources, &parserv1.FiltersRawMessages{
+			ChannelID: s.ChannelID.String(),
+			TgMsgId:   s.MessageID,
+			Username:  s.ChannelName,
+		})
+	}
+	return grpcSources
 }

@@ -122,6 +122,30 @@ func (r *NewsRepository) CreateNewsSources(ctx context.Context, tx sqltransactio
 	_, err := tx.ExecContext(ctx, query, args...)
 	return err
 }
+func (r *NewsRepository) GetNewsSourcesByNewsID(ctx context.Context, newsID uuid.UUID) ([]model.NewsSource, error) {
+	rows, err := r.db.QueryxContext(ctx, getNewsSourcesByNewsIDQuery, newsID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	sources := make([]model.NewsSource, 0, 5)
+	for rows.Next() {
+		var source model.NewsSource
+		err = rows.Scan(&source.ID, &source.MessageID, &source.NewsID, &source.ChannelID, &source.ChannelName)
+		if err != nil {
+			return nil, err
+		}
+		sources = append(sources, source)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return sources, nil
+}
 
 // build dynamic batch insert query for news sources
 func buildCreateNewsSourcesBatchQuery(sources []model.NewsSource) (string, []any) {

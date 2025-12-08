@@ -11,15 +11,15 @@ service TgParser {
     // Send request parser to parse tg channel messages
     rpc ParseMessages (ParseMessagesRequest) returns (ParseMessagesResponse);
     // Receive messages by channel channel id
-    rpc GetChennelMessages (GetMessagesRequest) returns (GetMessagesResponse);
+    rpc NewsSources (NewsSourcesRequest) returns (NewsSourcesResponse);
 }
 
 message Message {
     string type = 1; // message type: text, media text_media...
-    string text = 2; // message text
-    string html_text = 3; // telegram message with all text formating
-    string link = 4; // tg message link
-    int64 msg_id = 5; // tg internal message id
+    string html_text = 2; // telegram message with all text formating
+    string channel_id = 3; // internal channel ID
+    string username = 4; // channel username without @
+    int64 telegram_msg_id = 5; // tg internal message id
     int64 date = 6; // UTC UNIX time of message was puplicated
     repeated string photo_urls = 7; // tg message media photo url WARNING! telegram media links expire
 }
@@ -47,13 +47,18 @@ message ParseMessagesResponse {
     int32 msg_interval = 2; // medium interval between messages
 }
 
-message GetMessagesRequest {
-    int64 id = 1; // channel username
-    int32 limit = 2; 
-    int32 offset = 3;
-
+message FiltersRawMessages {
+    string channelID = 1; // channel ID
+    string username = 2; // channel username without @
+    int64 tg_msg_id = 3; // from tg message id
 }
-message GetMessagesResponse {
+
+// request to get messages from channels tg_msg_id
+message NewsSourcesRequest {
+    repeated FiltersRawMessages filters = 1;
+}
+
+message NewsSourcesResponse {
     bool success = 1;
     repeated Message messages = 2;
 }
