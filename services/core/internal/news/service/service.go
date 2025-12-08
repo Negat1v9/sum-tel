@@ -28,6 +28,17 @@ func NewNewsService(log *logger.Logger, store *store.Storage, newsConsumer *cons
 	}
 }
 
+// TODO: test
+func (s *NewsService) News(ctx context.Context, userID int, limit, offset int) (*model.NewsList, error) {
+	mn := "NewsService.News"
+	userNews, err := s.store.NewsRepo().GetByUserSubscription(ctx, userID, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", mn, err)
+	}
+
+	return userNews, nil
+}
+
 // proccess news from broker kafka save to db
 func (s *NewsService) ProcessNewsHandler() consumer.ProcFunc {
 	return func(shutDownCtx context.Context, msgs []kafka.Message) bool {

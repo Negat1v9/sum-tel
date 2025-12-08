@@ -19,6 +19,22 @@ const (
 		LIMIT $1 OFFSET $2
 	`
 
+	countNewsByUserSourcesQuary = `
+		SELECT count(DISTINCT ns.news_id) as total FROM user_subscriptions us
+				JOIN news_sources ns ON ns.channel_id = us.channel_id
+			WHERE us.user_id = $1
+	`
+	getNewsByUserSourcesQuary = `
+		SELECT n.id, n.title, n.summary, n.language, n.created_at, COUNT(ns.id) AS number_of_sources
+				FROM user_subscriptions us
+			JOIN news_sources ns ON ns.channel_id = us.channel_id
+			JOIN news n ON ns.news_id = n.id
+				WHERE us.user_id = $1
+			GROUP BY n.id
+				ORDER BY n.created_at DESC
+			LIMIT $2 OFFSET $3
+	`
+
 	deleteNewsQuery = `
 		DELETE FROM news
 		WHERE id = $1
@@ -33,16 +49,5 @@ const (
 	createNewsSourcesQueryPrefix = `
 		INSERT INTO news_sources (news_id, message_id, channel_id)
 		VALUES %s
-	`
-
-	deleteNewsSourceQuery = `
-		DELETE FROM news_sources
-		WHERE id = $1
-		RETURNING id, news_id, channel_id
-	`
-
-	deleteNewsSourcesByNewsIDQuery = `
-		DELETE FROM news_sources
-		WHERE news_id = $1
 	`
 )

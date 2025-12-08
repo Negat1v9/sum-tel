@@ -6,19 +6,25 @@ import (
 	channelhttp "github.com/Negat1v9/sum-tel/services/core/internal/channel/http"
 	channelservice "github.com/Negat1v9/sum-tel/services/core/internal/channel/service"
 	"github.com/Negat1v9/sum-tel/services/core/internal/middleware"
+	newshttp "github.com/Negat1v9/sum-tel/services/core/internal/news/http"
+	newsservice "github.com/Negat1v9/sum-tel/services/core/internal/news/service"
 )
 
-func (s *Server) MapHandlers(chService *channelservice.ChannelService) {
+func (s *Server) MapHandlers(chService *channelservice.ChannelService, newsService *newsservice.NewsService) {
 	router := http.NewServeMux()
 
 	mw := middleware.New(s.cfg)
 
 	// initialize handlers
 	channelHandler := channelhttp.NewChannelHandler(s.log, s.cfg, chService)
+	newsHandler := newshttp.NewNewsHandler(s.log, s.cfg, newsService)
 
 	// map handlers to routes
 	channelRouter := channelhttp.NewChannelRouter(channelHandler, mw)
 	router.Handle("/channels/", http.StripPrefix("/channels", channelRouter))
+
+	newsRouter := newshttp.NewNewsRouter(newsHandler, mw)
+	router.Handle("/news/", http.StripPrefix("/news", newsRouter))
 
 	apiV1Routes := http.NewServeMux()
 

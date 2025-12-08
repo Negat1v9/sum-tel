@@ -55,7 +55,7 @@ func (a *App) Run() error {
 	}()
 
 	server := server.New(a.cfg, a.log)
-	server.MapHandlers(channelService)
+	server.MapHandlers(channelService, newsService)
 
 	chCheckerWorker := channelchecker.NewCatcherNews(a.log, channelService)
 
