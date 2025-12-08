@@ -40,7 +40,7 @@ func (h *ChannelHandler) CreateChannel(w http.ResponseWriter, r *http.Request) {
 		utils.WriteErrResponse(w, utils.NewError(http.StatusUnprocessableEntity, "username is required", nil))
 		return
 	}
-	userID := r.Context().Value(middleware.CtxUserIDKey).(int64)
+	userID := r.Context().Value(middleware.CtxUserIDKey).(int)
 
 	createdChannel, err := h.s.CreateChannel(ctx, userID, username)
 	if err != nil {
@@ -82,7 +82,7 @@ func (h *ChannelHandler) SubscribeChannel(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	userID := r.Context().Value(middleware.CtxUserIDKey).(int64)
+	userID := r.Context().Value(middleware.CtxUserIDKey).(int)
 
 	subscription, err := h.s.SubscribeChannel(ctx, userID, channelIDParam)
 	if err != nil {
@@ -98,7 +98,7 @@ func (h *ChannelHandler) GetSubscriptions(w http.ResponseWriter, r *http.Request
 	ctx, cancel := context.WithTimeout(r.Context(), time.Second*time.Duration(h.cfg.WebConfig.ReadTimeout))
 	defer cancel()
 
-	userID := r.Context().Value(middleware.CtxUserIDKey).(int64)
+	userID := r.Context().Value(middleware.CtxUserIDKey).(int)
 
 	v := r.URL.Query()
 

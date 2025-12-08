@@ -21,11 +21,12 @@ type SourceKafkaType struct {
 }
 
 type News struct {
-	ID        uuid.UUID `db:"id" json:"id"`
-	Title     string    `db:"title" json:"title"`
-	Summary   string    `db:"summary" json:"summary"`
-	Language  string    `db:"language" json:"language"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	ID              uuid.UUID `db:"id" json:"id"`
+	Title           string    `db:"title" json:"title"`
+	Summary         string    `db:"summary" json:"summary"`
+	Language        string    `db:"language" json:"language"`
+	CreatedAt       time.Time `db:"created_at" json:"created_at"`
+	NumberOfSources int       `db:"number_of_sources" json:"number_of_sources"` // number of sources for this news geneated by DB
 }
 
 type NewsSource struct {
@@ -33,6 +34,11 @@ type NewsSource struct {
 	MessageID int64     `db:"message_id" json:"message_id"`
 	NewsID    uuid.UUID `db:"news_id" json:"news_id"`
 	ChannelID uuid.UUID `db:"channel_id" json:"channel_id"`
+}
+
+type NewsList struct {
+	TotalRecords int    `json:"total_records"`
+	News         []News `json:"news"`
 }
 
 func ConvertNewsKafkaTypeToNews(kafkaNews NewsKafkaType) *News {

@@ -8,7 +8,7 @@ import (
 
 type UserSubscription struct {
 	ID           int       `db:"id" json:"id"`
-	UserID       int64     `db:"user_id" json:"user_id"`
+	UserID       int       `db:"user_id" json:"user_id"`
 	ChannelID    uuid.UUID `db:"channel_id" json:"channel_id"`
 	SubscribedAt time.Time `db:"subscribed_at" json:"subscribed_at"`
 }
@@ -23,7 +23,7 @@ type UserSubscriptionWithChannelList struct {
 	UserSubscriptios []UserSubscriptionWithChannel `json:"subscriptions"`
 }
 
-func NewSub(userID int64, channelID uuid.UUID) *UserSubscription {
+func NewSub(userID int, channelID uuid.UUID) *UserSubscription {
 	return &UserSubscription{
 		UserID:       userID,
 		ChannelID:    channelID,

@@ -32,7 +32,7 @@ func (r *UserSubscriptionRepository) Create(ctx context.Context, tx sqltransacti
 	return sub, nil
 }
 
-func (r *UserSubscriptionRepository) GetByUserAndChannelID(ctx context.Context, userID int64, channelID uuid.UUID) (*model.UserSubscription, error) {
+func (r *UserSubscriptionRepository) GetByUserAndChannelID(ctx context.Context, userID int, channelID uuid.UUID) (*model.UserSubscription, error) {
 	sub := &model.UserSubscription{}
 	err := r.db.GetContext(ctx, sub, getSubscriptionByUserAndChannelQuary, userID, channelID)
 	if err != nil {
@@ -42,7 +42,7 @@ func (r *UserSubscriptionRepository) GetByUserAndChannelID(ctx context.Context, 
 	return sub, nil
 }
 
-func (r *UserSubscriptionRepository) GetByID(ctx context.Context, id int64) (*model.UserSubscription, error) {
+func (r *UserSubscriptionRepository) GetByID(ctx context.Context, id int) (*model.UserSubscription, error) {
 	sub := &model.UserSubscription{}
 	err := r.db.GetContext(ctx, sub, getSubscriptionByIDQuery, id)
 	if err != nil {
@@ -52,7 +52,7 @@ func (r *UserSubscriptionRepository) GetByID(ctx context.Context, id int64) (*mo
 	return sub, nil
 }
 
-func (r *UserSubscriptionRepository) GetByUserID(ctx context.Context, userID int64, limit, offset int) (*model.UserSubscriptionWithChannelList, error) {
+func (r *UserSubscriptionRepository) GetByUserID(ctx context.Context, userID int, limit, offset int) (*model.UserSubscriptionWithChannelList, error) {
 	var total int
 	err := r.db.SelectContext(ctx, &total, countAllUserSubscriptionsDQuery, userID)
 	if err != nil {
@@ -94,7 +94,7 @@ func (r *UserSubscriptionRepository) GetByUserID(ctx context.Context, userID int
 	}, nil
 }
 
-func (r *UserSubscriptionRepository) Delete(ctx context.Context, id int64) (*model.UserSubscription, error) {
+func (r *UserSubscriptionRepository) Delete(ctx context.Context, id int) (*model.UserSubscription, error) {
 	sub := &model.UserSubscription{}
 	err := r.db.GetContext(ctx, sub, deleteSubscriptionQuery, id)
 	if err != nil {

@@ -21,10 +21,10 @@ var (
 
 type UserRepository interface {
 	Create(ctx context.Context, user *model.User) (*model.User, error)
-	GetByID(ctx context.Context, id int64) (*model.User, error)
+	GetByID(ctx context.Context, id int) (*model.User, error)
 	GetAll(ctx context.Context, limit, offset int) ([]model.User, error)
 	Update(ctx context.Context, user *model.User) (*model.User, error)
-	Delete(ctx context.Context, id int64) (*model.User, error)
+	Delete(ctx context.Context, id int) (*model.User, error)
 }
 
 type ChannelRepository interface {
@@ -39,16 +39,17 @@ type ChannelRepository interface {
 
 type UserChannelSubscriptionRepository interface {
 	Create(ctx context.Context, tx sqltransaction.Txx, sub *model.UserSubscription) (*model.UserSubscription, error)
-	GetByID(ctx context.Context, id int64) (*model.UserSubscription, error)
-	GetByUserAndChannelID(ctx context.Context, userID int64, channelID uuid.UUID) (*model.UserSubscription, error)
-	Delete(ctx context.Context, id int64) (*model.UserSubscription, error)
-	GetByUserID(ctx context.Context, userID int64, limit, offset int) (*model.UserSubscriptionWithChannelList, error)
+	GetByID(ctx context.Context, id int) (*model.UserSubscription, error)
+	GetByUserAndChannelID(ctx context.Context, userID int, channelID uuid.UUID) (*model.UserSubscription, error)
+	Delete(ctx context.Context, id int) (*model.UserSubscription, error)
+	GetByUserID(ctx context.Context, userID int, limit, offset int) (*model.UserSubscriptionWithChannelList, error)
 }
 
 type NewsRepository interface {
 	Create(ctx context.Context, tx sqltransaction.Txx, news *model.News) error
 	GetByID(ctx context.Context, id uuid.UUID) (*model.News, error)
 	GetAll(ctx context.Context, limit, offset int) ([]model.News, error)
+	GetByUserSubscription(ctx context.Context, userID int, limit, offset int) (*model.NewsList, error)
 	Delete(ctx context.Context, id uuid.UUID) (*model.News, error)
 	CreateNewsSource(ctx context.Context, tx sqltransaction.Txx, source *model.NewsSource) error
 	CreateNewsSources(ctx context.Context, tx sqltransaction.Txx, sources []model.NewsSource) error

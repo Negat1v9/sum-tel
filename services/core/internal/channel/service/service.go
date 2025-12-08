@@ -30,7 +30,7 @@ func NewChannelService(stor *store.Storage, grpcClient *grpcclient.TgParserClien
 	}
 }
 
-func (s *ChannelService) CreateChannel(ctx context.Context, userID int64, username string) (res *model.Channel, err error) {
+func (s *ChannelService) CreateChannel(ctx context.Context, userID int, username string) (res *model.Channel, err error) {
 	// delete "@" if exists
 	username, _ = strings.CutPrefix(username, "@")
 	// check channel exists
@@ -100,7 +100,7 @@ func (s *ChannelService) GetChannelByUsername(ctx context.Context, username stri
 	return channel, nil
 }
 
-func (s *ChannelService) SubscribeChannel(ctx context.Context, userID int64, channelID string) (*model.UserSubscription, error) {
+func (s *ChannelService) SubscribeChannel(ctx context.Context, userID int, channelID string) (*model.UserSubscription, error) {
 	mn := "ChannelService.SubscribeChannel"
 	chID, err := uuid.Parse(channelID)
 	if err != nil {
@@ -142,7 +142,7 @@ func (s *ChannelService) SubscribeChannel(ctx context.Context, userID int64, cha
 }
 
 // get all user subscriptions
-func (s *ChannelService) UsersSubscriptions(ctx context.Context, userID int64, limit, offset int) (*model.UserSubscriptionWithChannelList, error) {
+func (s *ChannelService) UsersSubscriptions(ctx context.Context, userID int, limit, offset int) (*model.UserSubscriptionWithChannelList, error) {
 	return s.store.SubRepo().GetByUserID(ctx, userID, limit, offset)
 }
 

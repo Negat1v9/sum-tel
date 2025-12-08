@@ -32,7 +32,7 @@ func (r *UserRepository) Create(ctx context.Context, user *model.User) (*model.U
 	return user, nil
 }
 
-func (r *UserRepository) GetByID(ctx context.Context, id int64) (*model.User, error) {
+func (r *UserRepository) GetByID(ctx context.Context, id int) (*model.User, error) {
 	user := &model.User{}
 	err := r.db.GetContext(ctx, user, getUserByIDQuery, id)
 	if err != nil {
@@ -70,7 +70,7 @@ func (r *UserRepository) Update(ctx context.Context, user *model.User) (*model.U
 	return user, nil
 }
 
-func (r *UserRepository) Delete(ctx context.Context, id int64) (*model.User, error) {
+func (r *UserRepository) Delete(ctx context.Context, id int) (*model.User, error) {
 	user := &model.User{}
 	err := r.db.GetContext(ctx, user, deleteUserQuery, id)
 	if err != nil {
