@@ -43,4 +43,10 @@ const (
 		SET status = 'processed'
 		WHERE id = ANY($1)
 	`
+
+	getMessagesByFiltersQuery = `
+		SELECT id, channel_id, content_type, telegram_message_id, html_text, status, media_urls, message_date, received_at
+		FROM raw_messages
+		WHERE (channel_id, telegram_message_id) IN (%s)
+	`
 )

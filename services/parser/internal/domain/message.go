@@ -16,6 +16,8 @@ type RawMessage struct {
 	MediaURLs         pq.StringArray `json:"media_urls" db:"media_urls"`                   // URLs of media (images) in the message
 	MessageDate       time.Time      `json:"message_date" db:"message_date"`               // date of the message in the channel
 	ReceivedAt        time.Time      `json:"received_at" db:"received_at"`                 // date when the message was received by the system
+
+	ChannelUsername string `json:"channel_username,omitempty" db:"username"` // channel username, not stored in DB
 }
 
 func NewRawMsg(chID string, contentType string, telegramMessageID int64, htmlText string, mediaURLs pq.StringArray, messageDate time.Time) RawMessage {

@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 
+	parserv1 "github.com/Negat1v9/sum-tel/services/parser/internal/api/proto"
 	"github.com/Negat1v9/sum-tel/services/parser/internal/domain"
 	rawMessageRepository "github.com/Negat1v9/sum-tel/services/parser/internal/store/rawMessageRepository"
 	sqltransaction "github.com/Negat1v9/sum-tel/services/parser/internal/store/sqlTransaction"
@@ -15,6 +16,7 @@ type RawMsgRepository interface {
 	GetChannelMessages(ctx context.Context, chID string, limit, offset int64) ([]domain.RawMessage, error)
 	// return messages sorted ASC on RawMessage.MessageDate and update status this messages
 	GetAndProcessedChannelMessages(ctx context.Context, tx sqltransaction.Txx, limit int) ([]domain.RawMessage, error)
+	GetMessagesByFilters(ctx context.Context, filters []*parserv1.FiltersRawMessages) ([]domain.RawMessage, error)
 }
 
 type Store struct {
