@@ -40,3 +40,12 @@ func (s *ParserGRPCServer) ParseMessages(ctx context.Context, req *parserv1.Pars
 	}
 	return r, nil
 }
+
+func (s *ParserGRPCServer) NewsSources(ctx context.Context, req *parserv1.NewsSourcesRequest) (*parserv1.NewsSourcesResponse, error) {
+	r, err := s.parserService.GetNewsSources(ctx, req.GetFilters())
+	if err != nil {
+		slog.Error("GetNewsSources:", slog.String("err", err.Error()))
+		return nil, status.Error(codes.Internal, "failed get news sources")
+	}
+	return r, nil
+}

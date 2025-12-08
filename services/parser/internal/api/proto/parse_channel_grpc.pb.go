@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	TgParser_ParseNewChannel_FullMethodName    = "/tg_parser.TgParser/ParseNewChannel"
-	TgParser_ParseMessages_FullMethodName      = "/tg_parser.TgParser/ParseMessages"
-	TgParser_GetChennelMessages_FullMethodName = "/tg_parser.TgParser/GetChennelMessages"
+	TgParser_ParseNewChannel_FullMethodName = "/tg_parser.TgParser/ParseNewChannel"
+	TgParser_ParseMessages_FullMethodName   = "/tg_parser.TgParser/ParseMessages"
+	TgParser_NewsSources_FullMethodName     = "/tg_parser.TgParser/NewsSources"
 )
 
 // TgParserClient is the client API for TgParser service.
@@ -33,7 +33,7 @@ type TgParserClient interface {
 	// Send request parser to parse tg channel messages
 	ParseMessages(ctx context.Context, in *ParseMessagesRequest, opts ...grpc.CallOption) (*ParseMessagesResponse, error)
 	// Receive messages by channel channel id
-	GetChennelMessages(ctx context.Context, in *GetMessagesRequest, opts ...grpc.CallOption) (*GetMessagesResponse, error)
+	NewsSources(ctx context.Context, in *NewsSourcesRequest, opts ...grpc.CallOption) (*NewsSourcesResponse, error)
 }
 
 type tgParserClient struct {
@@ -64,10 +64,10 @@ func (c *tgParserClient) ParseMessages(ctx context.Context, in *ParseMessagesReq
 	return out, nil
 }
 
-func (c *tgParserClient) GetChennelMessages(ctx context.Context, in *GetMessagesRequest, opts ...grpc.CallOption) (*GetMessagesResponse, error) {
+func (c *tgParserClient) NewsSources(ctx context.Context, in *NewsSourcesRequest, opts ...grpc.CallOption) (*NewsSourcesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetMessagesResponse)
-	err := c.cc.Invoke(ctx, TgParser_GetChennelMessages_FullMethodName, in, out, cOpts...)
+	out := new(NewsSourcesResponse)
+	err := c.cc.Invoke(ctx, TgParser_NewsSources_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ type TgParserServer interface {
 	// Send request parser to parse tg channel messages
 	ParseMessages(context.Context, *ParseMessagesRequest) (*ParseMessagesResponse, error)
 	// Receive messages by channel channel id
-	GetChennelMessages(context.Context, *GetMessagesRequest) (*GetMessagesResponse, error)
+	NewsSources(context.Context, *NewsSourcesRequest) (*NewsSourcesResponse, error)
 	mustEmbedUnimplementedTgParserServer()
 }
 
@@ -100,8 +100,8 @@ func (UnimplementedTgParserServer) ParseNewChannel(context.Context, *NewChannelR
 func (UnimplementedTgParserServer) ParseMessages(context.Context, *ParseMessagesRequest) (*ParseMessagesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ParseMessages not implemented")
 }
-func (UnimplementedTgParserServer) GetChennelMessages(context.Context, *GetMessagesRequest) (*GetMessagesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetChennelMessages not implemented")
+func (UnimplementedTgParserServer) NewsSources(context.Context, *NewsSourcesRequest) (*NewsSourcesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NewsSources not implemented")
 }
 func (UnimplementedTgParserServer) mustEmbedUnimplementedTgParserServer() {}
 func (UnimplementedTgParserServer) testEmbeddedByValue()                  {}
@@ -160,20 +160,20 @@ func _TgParser_ParseMessages_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TgParser_GetChennelMessages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetMessagesRequest)
+func _TgParser_NewsSources_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NewsSourcesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TgParserServer).GetChennelMessages(ctx, in)
+		return srv.(TgParserServer).NewsSources(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: TgParser_GetChennelMessages_FullMethodName,
+		FullMethod: TgParser_NewsSources_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TgParserServer).GetChennelMessages(ctx, req.(*GetMessagesRequest))
+		return srv.(TgParserServer).NewsSources(ctx, req.(*NewsSourcesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -194,8 +194,8 @@ var TgParser_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _TgParser_ParseMessages_Handler,
 		},
 		{
-			MethodName: "GetChennelMessages",
-			Handler:    _TgParser_GetChennelMessages_Handler,
+			MethodName: "NewsSources",
+			Handler:    _TgParser_NewsSources_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

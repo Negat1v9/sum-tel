@@ -9,9 +9,7 @@ COPY services/parser ./services/parser
 WORKDIR /app/services/parser
 
 RUN --mount=type=cache,target=/go/pkg/mod \
-    go mod download
-
-RUN go build -o parser cmd/main.go
+    go build -o parser cmd/main.go
 
 FROM alpine:3.22.2
 

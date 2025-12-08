@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	parserv1 "github.com/Negat1v9/sum-tel/services/parser/internal/api/proto"
 	"github.com/Negat1v9/sum-tel/services/parser/internal/domain"
 	sqltransaction "github.com/Negat1v9/sum-tel/services/parser/internal/store/sqlTransaction"
 	"github.com/jmoiron/sqlx"
@@ -61,6 +62,33 @@ func (r *rawMessageRepository) GetLatestChannelMessage(ctx context.Context, chID
 func (r *rawMessageRepository) GetAndProcessedChannelMessages(ctx context.Context, tx sqltransaction.Txx, limit int) ([]domain.RawMessage, error) {
 	var msgs []domain.RawMessage
 	err := tx.SelectContext(ctx, &msgs, getAndProcessMessagesQuery, limit)
+	if err != nil {
+		return nil, err
+	}
+	return msgs, nil
+}
+
+// GetMessagesByFilters returns messages that match the given filters
+// Each filter contains channel_id and telegram_message_id pair, and both conditions must be satisfied
+func (r *rawMessageRepository) GetMessagesByFilters(ctx context.Context, filters []*parserv1.FiltersRawMessages) ([]domain.RawMessage, error) {
+
+	if len(filters) == 0 {
+		return []domain.RawMessage{}, nil
+	}
+
+	args := make([]any, 0, len(filters)*2)
+	placeholders := make([]string, len(filters))
+
+	for i, filter := range filters {
+		offset := i * 2
+		placeholders[i] = fmt.Sprintf("($%d, $%d)", offset+1, offset+2)
+		args = append(args, filter.ChannelID, filter.TgMsgId)
+	}
+
+	query := fmt.Sprintf(getMessagesByFiltersQuery, strings.Join(placeholders, ","))
+
+	var msgs []domain.RawMessage
+	err := r.db.SelectContext(ctx, &msgs, query, args...)
 	if err != nil {
 		return nil, err
 	}

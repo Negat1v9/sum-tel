@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	parserv1 "github.com/Negat1v9/sum-tel/services/parser/internal/api/proto"
@@ -149,6 +150,41 @@ func (s *ParserService) ParseMessages(ctx context.Context, channelID string, use
 	return &parserv1.ParseMessagesResponse{
 		Success:     true,
 		MsgInterval: DefaultTimePerMessage,
+	}, nil
+}
+
+func (s *ParserService) GetNewsSources(ctx context.Context, filters []*parserv1.FiltersRawMessages) (*parserv1.NewsSourcesResponse, error) {
+	const mn = "ParserService.GetNewsSources"
+
+	// Get messages from database by filters
+	rawMessages, err := s.storage.RawMsgRepo().GetMessagesByFilters(ctx, filters)
+	if err != nil {
+		return nil, fmt.Errorf("%s.GetMessagesByFilters: %w", mn, err)
+	}
+
+	// Create a map of filters for quick lookup of username by channelID
+	filterMap := make(map[string]string)
+	for _, filter := range filters {
+		filterMap[filter.ChannelID+strconv.FormatInt(filter.TgMsgId, 10)] = filter.Username
+	}
+
+	// Convert domain messages to proto messages and populate username field
+	messages := make([]*parserv1.Message, 0, len(rawMessages))
+	for _, rawMsg := range rawMessages {
+		messages = append(messages, &parserv1.Message{
+			Type:          rawMsg.ContentType,
+			HtmlText:      rawMsg.HTMLText,
+			ChannelId:     rawMsg.ChannelID,
+			Username:      filterMap[rawMsg.ChannelID+strconv.FormatInt(rawMsg.TelegramMessageID, 10)], // Populate username from filter map
+			TelegramMsgId: rawMsg.TelegramMessageID,
+			Date:          rawMsg.MessageDate.Unix(),
+			PhotoUrls:     rawMsg.MediaURLs,
+		})
+	}
+
+	return &parserv1.NewsSourcesResponse{
+		Success:  true,
+		Messages: messages,
 	}, nil
 }
 
