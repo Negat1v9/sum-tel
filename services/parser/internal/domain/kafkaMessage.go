@@ -4,7 +4,7 @@ import tgparser "github.com/Negat1v9/sum-tel/services/parser/internal/parser/tgP
 
 type KafkaRawMessage struct {
 	ChannelID string `json:"channel_id"` // source channel id from parser service
-	MessageID int64  `json:"message_id"` // message id from parser service
+	MessageID int64  `json:"message_id"` // message id from telegram
 	Text      string `json:"text"`       // text content
 }
 
