@@ -1,59 +1,71 @@
-# Sum-Tel
+# SumTel
 
-A microservices-based system for parsing messages from Telegram channels and generating news summaries.
+> ⚠️ **Project Status: Work in Progress**
+>
+> This project is currently under active development. Features, architecture, and API contracts are subject to change.
 
-## Description
+## Overview
 
-Sum-Tel is an early-stage project aimed at extracting messages from Telegram channels through parsing techniques and generating concise summaries of news content. The system is built using Go and follows a microservices architecture to ensure scalability and modularity.
+SumTel is a microservices-based platform designed to parse Telegram channels and generate concise, AI-powered summaries of their content. The service aggregates raw messages from various channels and uses Artificial Intelligence to create digestible news feeds, allowing users to stay updated without reading through high-volume message streams.
 
-## Features
+## Technologies
 
-- **Message Parsing**: Extract messages from specified Telegram channels.
-- **News Summarization**: Generate AI-powered summaries of news articles.
-- **Microservices Architecture**: Modular design with separate services for core functionality and parsing.
-- **gRPC Communication**: Services communicate via gRPC for efficient inter-service calls.
+The project utilizes a modern, scalable technology stack:
+
+- **Programming Language:** Go (Golang)
+- **Communication:**
+  - **gRPC:** For efficient inter-service communication.
+  - **REST API:** For client-facing interactions.
+- **Messaging:** Apache Kafka (for asynchronous event-driven architecture).
+- **Database:** PostgreSQL.
+- **Infrastructure:** Docker & Docker Compose.
+- **AI Integration:** LLM-based processing for text summarization.
 
 ## Architecture
 
-The project consists of the following components:
+The system is divided into several specialized microservices:
 
-- **Protos**: Protocol buffer definitions for gRPC services.
-- **Services**:
-  - `core`: Handles user management, channels, and subscriptions.
-  - `parser`: Responsible for parsing Telegram messages and processing them.
-- **Shared**: Common utilities and configurations.
+- **Core Service (`services/core`):** The central hub responsible for user management, channel subscriptions, and serving the main API.
+- **Parser Service (`services/parser`):** Connects to Telegram to fetch and process raw messages from channels.
+- **Narrator Service (`services/narrator`):** The AI-driven component that consumes raw messages and generates human-readable summaries.
+- **Migrator (`services/migrator`):** Handles database schema migrations and versioning.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Go 1.21
- or later
-- PostgreSQL
-- Docker (for containerized deployment)
-- protoc (for generating gRPC code)
+- Docker & Docker Compose
+- Go 1.22+ (for local development)
+- Make
 
-### Installation
+### Running the Project
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Negat1v9/sum-tel.git
-   cd sum-tel
-   ```
+You can start the entire infrastructure using the provided Makefile:
 
-2. Generate gRPC code:
-    ```bash
-    make gen_proto
-    ```
+```bash
+make up
+```
 
-### Running
+This command will:
+1. Build and start all services via Docker Compose.
+2. Initialize the necessary Kafka topics (`raw-messages`, `news-aggregated`).
+3. Set up the database.
 
-1. Start the services:
-Use Docker Compose for full setup:
-   ```bash
-   docker-compose up --build -d
-   ```
+To stop the services:
 
-## License
+```bash
+make down
+```
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+## TODO
+
+The following tasks are planned for future development:
+
+- [ ] **Testing:** Increase unit test coverage and implement integration tests.
+- [ ] **CI/CD:** Set up automated build and deployment pipelines (e.g., GitHub Actions).
+- [ ] **Observability:** Add metrics (Prometheus), dashboards (Grafana), and distributed tracing (Jaeger/OpenTelemetry).
+- [ ] **API Documentation:** Generate Swagger/OpenAPI documentation for the REST API.
+- [ ] **AI Enhancements:** Improve prompt engineering for better summaries and support additional LLM providers.
+- [ ] **Parser Improvements:** Add error handling strategies and support for media parsing (images/videos).
+- [ ] **Security:** Enhance authentication mechanisms and implement Role-Based Access Control (RBAC).
+
