@@ -30,7 +30,7 @@ func NewChannelService(stor *store.Storage, grpcClient *grpcclient.TgParserClien
 	}
 }
 
-func (s *ChannelService) CreateChannel(ctx context.Context, userID int64, username string) (res *model.Channel, err error) {
+func (s *ChannelService) CreateChannel(ctx context.Context, userID int, username string) (res *model.Channel, err error) {
 	// delete "@" if exists
 	username, _ = strings.CutPrefix(username, "@")
 	// check channel exists
@@ -100,12 +100,49 @@ func (s *ChannelService) GetChannelByUsername(ctx context.Context, username stri
 	return channel, nil
 }
 
-func (s *ChannelService) SubscribeChannel(ctx context.Context, userID int64, channelID string) (*model.UserSubscription, error) {
-	return nil, fmt.Errorf("not implemented: SubscribeChannel")
+func (s *ChannelService) SubscribeChannel(ctx context.Context, userID int, channelID string) (*model.UserSubscription, error) {
+	mn := "ChannelService.SubscribeChannel"
+	chID, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, fmt.Errorf("%s invalid channel ID: %w", mn, err)
+	}
+
+	_, err = s.store.ChannelRepo().GetByID(ctx, chID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", mn, err)
+	}
+
+	existsSub, err := s.store.SubRepo().GetByUserAndChannelID(ctx, userID, chID)
+	switch {
+	case existsSub != nil && err == nil:
+		return existsSub, nil
+	case err != nil && err != sql.ErrNoRows:
+		return nil, fmt.Errorf("%s: %w", mn, err)
+	}
+
+	tx, err := s.store.Transaction(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", mn, err)
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	createdSub, err := s.store.SubRepo().Create(ctx, tx, model.NewSub(userID, chID))
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", mn, err)
+	}
+
+	return createdSub, nil
 }
 
 // get all user subscriptions
-func (s *ChannelService) UsersSubscriptions(ctx context.Context, userID int64, limit, offset int) ([]model.UserSubscription, error) {
+func (s *ChannelService) UsersSubscriptions(ctx context.Context, userID int, limit, offset int) (*model.UserSubscriptionWithChannelList, error) {
 	return s.store.SubRepo().GetByUserID(ctx, userID, limit, offset)
 }
 
@@ -136,7 +173,7 @@ func (s *ChannelService) ParseChannel(ctx context.Context, channelID uuid.UUID, 
 		ID:            channelID,
 		ParseInterval: int(result.MsgInterval),
 		UpdatedAt:     time.Now(),
-		LastParsedAt:  sql.NullTime{Time: time.Now(), Valid: true},
+		LastParsedAt:  time.Now(),
 	}
 	_, err = s.store.ChannelRepo().Update(ctx, updChannel)
 	if err != nil {

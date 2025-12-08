@@ -23,13 +23,13 @@ const (
 
 type Message struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`                            // message type: text, media text_media...
-	Text          string                 `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`                            // message text
-	HtmlText      string                 `protobuf:"bytes,3,opt,name=html_text,json=htmlText,proto3" json:"html_text,omitempty"`    // telegram message with all text formating
-	Link          string                 `protobuf:"bytes,4,opt,name=link,proto3" json:"link,omitempty"`                            // tg message link
-	MsgId         int64                  `protobuf:"varint,5,opt,name=msg_id,json=msgId,proto3" json:"msg_id,omitempty"`            // tg internal message id
-	Date          int64                  `protobuf:"varint,6,opt,name=date,proto3" json:"date,omitempty"`                           // UTC UNIX time of message was puplicated
-	PhotoUrls     []string               `protobuf:"bytes,7,rep,name=photo_urls,json=photoUrls,proto3" json:"photo_urls,omitempty"` // tg message media photo url WARNING! telegram media links expire
+	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`                                           // message type: text, media text_media...
+	HtmlText      string                 `protobuf:"bytes,2,opt,name=html_text,json=htmlText,proto3" json:"html_text,omitempty"`                   // telegram message with all text formating
+	ChannelId     string                 `protobuf:"bytes,3,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`                // internal channel ID
+	Username      string                 `protobuf:"bytes,4,opt,name=username,proto3" json:"username,omitempty"`                                   // channel username without @
+	TelegramMsgId int64                  `protobuf:"varint,5,opt,name=telegram_msg_id,json=telegramMsgId,proto3" json:"telegram_msg_id,omitempty"` // tg internal message id
+	Date          int64                  `protobuf:"varint,6,opt,name=date,proto3" json:"date,omitempty"`                                          // UTC UNIX time of message was puplicated
+	PhotoUrls     []string               `protobuf:"bytes,7,rep,name=photo_urls,json=photoUrls,proto3" json:"photo_urls,omitempty"`                // tg message media photo url WARNING! telegram media links expire
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -71,13 +71,6 @@ func (x *Message) GetType() string {
 	return ""
 }
 
-func (x *Message) GetText() string {
-	if x != nil {
-		return x.Text
-	}
-	return ""
-}
-
 func (x *Message) GetHtmlText() string {
 	if x != nil {
 		return x.HtmlText
@@ -85,16 +78,23 @@ func (x *Message) GetHtmlText() string {
 	return ""
 }
 
-func (x *Message) GetLink() string {
+func (x *Message) GetChannelId() string {
 	if x != nil {
-		return x.Link
+		return x.ChannelId
 	}
 	return ""
 }
 
-func (x *Message) GetMsgId() int64 {
+func (x *Message) GetUsername() string {
 	if x != nil {
-		return x.MsgId
+		return x.Username
+	}
+	return ""
+}
+
+func (x *Message) GetTelegramMsgId() int64 {
+	if x != nil {
+		return x.TelegramMsgId
 	}
 	return 0
 }
@@ -345,29 +345,29 @@ func (x *ParseMessagesResponse) GetMsgInterval() int32 {
 	return 0
 }
 
-type GetMessagesRequest struct {
+type FiltersRawMessages struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"` // channel username
-	Limit         int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
-	Offset        int32                  `protobuf:"varint,3,opt,name=offset,proto3" json:"offset,omitempty"`
+	ChannelID     string                 `protobuf:"bytes,1,opt,name=channelID,proto3" json:"channelID,omitempty"`               // channel ID
+	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`                 // channel username without @
+	TgMsgId       int64                  `protobuf:"varint,3,opt,name=tg_msg_id,json=tgMsgId,proto3" json:"tg_msg_id,omitempty"` // from tg message id
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetMessagesRequest) Reset() {
-	*x = GetMessagesRequest{}
+func (x *FiltersRawMessages) Reset() {
+	*x = FiltersRawMessages{}
 	mi := &file_protos_parse_channel_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetMessagesRequest) String() string {
+func (x *FiltersRawMessages) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetMessagesRequest) ProtoMessage() {}
+func (*FiltersRawMessages) ProtoMessage() {}
 
-func (x *GetMessagesRequest) ProtoReflect() protoreflect.Message {
+func (x *FiltersRawMessages) ProtoReflect() protoreflect.Message {
 	mi := &file_protos_parse_channel_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -379,33 +379,78 @@ func (x *GetMessagesRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetMessagesRequest.ProtoReflect.Descriptor instead.
-func (*GetMessagesRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use FiltersRawMessages.ProtoReflect.Descriptor instead.
+func (*FiltersRawMessages) Descriptor() ([]byte, []int) {
 	return file_protos_parse_channel_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *GetMessagesRequest) GetId() int64 {
+func (x *FiltersRawMessages) GetChannelID() string {
 	if x != nil {
-		return x.Id
+		return x.ChannelID
+	}
+	return ""
+}
+
+func (x *FiltersRawMessages) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *FiltersRawMessages) GetTgMsgId() int64 {
+	if x != nil {
+		return x.TgMsgId
 	}
 	return 0
 }
 
-func (x *GetMessagesRequest) GetLimit() int32 {
-	if x != nil {
-		return x.Limit
-	}
-	return 0
+// request to get messages from channels tg_msg_id
+type NewsSourcesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Filters       []*FiltersRawMessages  `protobuf:"bytes,1,rep,name=filters,proto3" json:"filters,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetMessagesRequest) GetOffset() int32 {
-	if x != nil {
-		return x.Offset
-	}
-	return 0
+func (x *NewsSourcesRequest) Reset() {
+	*x = NewsSourcesRequest{}
+	mi := &file_protos_parse_channel_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
-type GetMessagesResponse struct {
+func (x *NewsSourcesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NewsSourcesRequest) ProtoMessage() {}
+
+func (x *NewsSourcesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_protos_parse_channel_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NewsSourcesRequest.ProtoReflect.Descriptor instead.
+func (*NewsSourcesRequest) Descriptor() ([]byte, []int) {
+	return file_protos_parse_channel_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *NewsSourcesRequest) GetFilters() []*FiltersRawMessages {
+	if x != nil {
+		return x.Filters
+	}
+	return nil
+}
+
+type NewsSourcesResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	Messages      []*Message             `protobuf:"bytes,2,rep,name=messages,proto3" json:"messages,omitempty"`
@@ -413,21 +458,21 @@ type GetMessagesResponse struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetMessagesResponse) Reset() {
-	*x = GetMessagesResponse{}
-	mi := &file_protos_parse_channel_proto_msgTypes[6]
+func (x *NewsSourcesResponse) Reset() {
+	*x = NewsSourcesResponse{}
+	mi := &file_protos_parse_channel_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetMessagesResponse) String() string {
+func (x *NewsSourcesResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetMessagesResponse) ProtoMessage() {}
+func (*NewsSourcesResponse) ProtoMessage() {}
 
-func (x *GetMessagesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_protos_parse_channel_proto_msgTypes[6]
+func (x *NewsSourcesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_protos_parse_channel_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -438,19 +483,19 @@ func (x *GetMessagesResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetMessagesResponse.ProtoReflect.Descriptor instead.
-func (*GetMessagesResponse) Descriptor() ([]byte, []int) {
-	return file_protos_parse_channel_proto_rawDescGZIP(), []int{6}
+// Deprecated: Use NewsSourcesResponse.ProtoReflect.Descriptor instead.
+func (*NewsSourcesResponse) Descriptor() ([]byte, []int) {
+	return file_protos_parse_channel_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *GetMessagesResponse) GetSuccess() bool {
+func (x *NewsSourcesResponse) GetSuccess() bool {
 	if x != nil {
 		return x.Success
 	}
 	return false
 }
 
-func (x *GetMessagesResponse) GetMessages() []*Message {
+func (x *NewsSourcesResponse) GetMessages() []*Message {
 	if x != nil {
 		return x.Messages
 	}
@@ -461,13 +506,14 @@ var File_protos_parse_channel_proto protoreflect.FileDescriptor
 
 const file_protos_parse_channel_proto_rawDesc = "" +
 	"\n" +
-	"\x1aprotos/parse_channel.proto\x12\ttg_parser\"\xac\x01\n" +
+	"\x1aprotos/parse_channel.proto\x12\ttg_parser\"\xd0\x01\n" +
 	"\aMessage\x12\x12\n" +
-	"\x04type\x18\x01 \x01(\tR\x04type\x12\x12\n" +
-	"\x04text\x18\x02 \x01(\tR\x04text\x12\x1b\n" +
-	"\thtml_text\x18\x03 \x01(\tR\bhtmlText\x12\x12\n" +
-	"\x04link\x18\x04 \x01(\tR\x04link\x12\x15\n" +
-	"\x06msg_id\x18\x05 \x01(\x03R\x05msgId\x12\x12\n" +
+	"\x04type\x18\x01 \x01(\tR\x04type\x12\x1b\n" +
+	"\thtml_text\x18\x02 \x01(\tR\bhtmlText\x12\x1d\n" +
+	"\n" +
+	"channel_id\x18\x03 \x01(\tR\tchannelId\x12\x1a\n" +
+	"\busername\x18\x04 \x01(\tR\busername\x12&\n" +
+	"\x0ftelegram_msg_id\x18\x05 \x01(\x03R\rtelegramMsgId\x12\x12\n" +
 	"\x04date\x18\x06 \x01(\x03R\x04date\x12\x1d\n" +
 	"\n" +
 	"photo_urls\x18\a \x03(\tR\tphotoUrls\"M\n" +
@@ -485,18 +531,20 @@ const file_protos_parse_channel_proto_rawDesc = "" +
 	"\busername\x18\x02 \x01(\tR\busername\"T\n" +
 	"\x15ParseMessagesResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12!\n" +
-	"\fmsg_interval\x18\x02 \x01(\x05R\vmsgInterval\"R\n" +
-	"\x12GetMessagesRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
-	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\x16\n" +
-	"\x06offset\x18\x03 \x01(\x05R\x06offset\"_\n" +
-	"\x13GetMessagesResponse\x12\x18\n" +
+	"\fmsg_interval\x18\x02 \x01(\x05R\vmsgInterval\"j\n" +
+	"\x12FiltersRawMessages\x12\x1c\n" +
+	"\tchannelID\x18\x01 \x01(\tR\tchannelID\x12\x1a\n" +
+	"\busername\x18\x02 \x01(\tR\busername\x12\x1a\n" +
+	"\ttg_msg_id\x18\x03 \x01(\x03R\atgMsgId\"M\n" +
+	"\x12NewsSourcesRequest\x127\n" +
+	"\afilters\x18\x01 \x03(\v2\x1d.tg_parser.FiltersRawMessagesR\afilters\"_\n" +
+	"\x13NewsSourcesResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12.\n" +
-	"\bmessages\x18\x02 \x03(\v2\x12.tg_parser.MessageR\bmessages2\x83\x02\n" +
+	"\bmessages\x18\x02 \x03(\v2\x12.tg_parser.MessageR\bmessages2\xfc\x01\n" +
 	"\bTgParser\x12N\n" +
 	"\x0fParseNewChannel\x12\x1c.tg_parser.NewChannelRequest\x1a\x1d.tg_parser.NewChannelResponse\x12R\n" +
-	"\rParseMessages\x12\x1f.tg_parser.ParseMessagesRequest\x1a .tg_parser.ParseMessagesResponse\x12S\n" +
-	"\x12GetChennelMessages\x12\x1d.tg_parser.GetMessagesRequest\x1a\x1e.tg_parser.GetMessagesResponseB\rZ\v./;parserv1b\x06proto3"
+	"\rParseMessages\x12\x1f.tg_parser.ParseMessagesRequest\x1a .tg_parser.ParseMessagesResponse\x12L\n" +
+	"\vNewsSources\x12\x1d.tg_parser.NewsSourcesRequest\x1a\x1e.tg_parser.NewsSourcesResponseB\rZ\v./;parserv1b\x06proto3"
 
 var (
 	file_protos_parse_channel_proto_rawDescOnce sync.Once
@@ -510,29 +558,31 @@ func file_protos_parse_channel_proto_rawDescGZIP() []byte {
 	return file_protos_parse_channel_proto_rawDescData
 }
 
-var file_protos_parse_channel_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_protos_parse_channel_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_protos_parse_channel_proto_goTypes = []any{
 	(*Message)(nil),               // 0: tg_parser.Message
 	(*NewChannelRequest)(nil),     // 1: tg_parser.NewChannelRequest
 	(*NewChannelResponse)(nil),    // 2: tg_parser.NewChannelResponse
 	(*ParseMessagesRequest)(nil),  // 3: tg_parser.ParseMessagesRequest
 	(*ParseMessagesResponse)(nil), // 4: tg_parser.ParseMessagesResponse
-	(*GetMessagesRequest)(nil),    // 5: tg_parser.GetMessagesRequest
-	(*GetMessagesResponse)(nil),   // 6: tg_parser.GetMessagesResponse
+	(*FiltersRawMessages)(nil),    // 5: tg_parser.FiltersRawMessages
+	(*NewsSourcesRequest)(nil),    // 6: tg_parser.NewsSourcesRequest
+	(*NewsSourcesResponse)(nil),   // 7: tg_parser.NewsSourcesResponse
 }
 var file_protos_parse_channel_proto_depIdxs = []int32{
-	0, // 0: tg_parser.GetMessagesResponse.messages:type_name -> tg_parser.Message
-	1, // 1: tg_parser.TgParser.ParseNewChannel:input_type -> tg_parser.NewChannelRequest
-	3, // 2: tg_parser.TgParser.ParseMessages:input_type -> tg_parser.ParseMessagesRequest
-	5, // 3: tg_parser.TgParser.GetChennelMessages:input_type -> tg_parser.GetMessagesRequest
-	2, // 4: tg_parser.TgParser.ParseNewChannel:output_type -> tg_parser.NewChannelResponse
-	4, // 5: tg_parser.TgParser.ParseMessages:output_type -> tg_parser.ParseMessagesResponse
-	6, // 6: tg_parser.TgParser.GetChennelMessages:output_type -> tg_parser.GetMessagesResponse
-	4, // [4:7] is the sub-list for method output_type
-	1, // [1:4] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	5, // 0: tg_parser.NewsSourcesRequest.filters:type_name -> tg_parser.FiltersRawMessages
+	0, // 1: tg_parser.NewsSourcesResponse.messages:type_name -> tg_parser.Message
+	1, // 2: tg_parser.TgParser.ParseNewChannel:input_type -> tg_parser.NewChannelRequest
+	3, // 3: tg_parser.TgParser.ParseMessages:input_type -> tg_parser.ParseMessagesRequest
+	6, // 4: tg_parser.TgParser.NewsSources:input_type -> tg_parser.NewsSourcesRequest
+	2, // 5: tg_parser.TgParser.ParseNewChannel:output_type -> tg_parser.NewChannelResponse
+	4, // 6: tg_parser.TgParser.ParseMessages:output_type -> tg_parser.ParseMessagesResponse
+	7, // 7: tg_parser.TgParser.NewsSources:output_type -> tg_parser.NewsSourcesResponse
+	5, // [5:8] is the sub-list for method output_type
+	2, // [2:5] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_protos_parse_channel_proto_init() }
@@ -546,7 +596,7 @@ func file_protos_parse_channel_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_protos_parse_channel_proto_rawDesc), len(file_protos_parse_channel_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

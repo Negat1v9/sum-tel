@@ -7,13 +7,23 @@ import (
 )
 
 type UserSubscription struct {
-	ID           int       `db:"id"`
-	UserID       int64     `db:"user_id"`
-	ChannelID    uuid.UUID `db:"channel_id"`
-	SubscribedAt time.Time `db:"subscribed_at"`
+	ID           int       `db:"id" json:"id"`
+	UserID       int       `db:"user_id" json:"user_id"`
+	ChannelID    uuid.UUID `db:"channel_id" json:"channel_id"`
+	SubscribedAt time.Time `db:"subscribed_at" json:"subscribed_at"`
 }
 
-func NewSub(userID int64, channelID uuid.UUID) *UserSubscription {
+type UserSubscriptionWithChannel struct {
+	UserSubscription
+	Channel Channel `json:"channel"`
+}
+
+type UserSubscriptionWithChannelList struct {
+	TotalRecords     int                           `json:"total_records"`
+	UserSubscriptios []UserSubscriptionWithChannel `json:"subscriptions"`
+}
+
+func NewSub(userID int, channelID uuid.UUID) *UserSubscription {
 	return &UserSubscription{
 		UserID:       userID,
 		ChannelID:    channelID,

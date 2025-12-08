@@ -47,7 +47,7 @@ func (a *App) Run() error {
 	// services:
 	channelService := channelservice.NewChannelService(storage, tgParsergRPCClient)
 
-	newsService := newsservice.NewNewsService(a.log, storage, aggregatedNewsConsumer)
+	newsService := newsservice.NewNewsService(a.log, storage, aggregatedNewsConsumer, tgParsergRPCClient)
 
 	go func() {
 		a.log.Infof("start aggregatedNewsConsumer processing")
@@ -55,7 +55,7 @@ func (a *App) Run() error {
 	}()
 
 	server := server.New(a.cfg, a.log)
-	server.MapHandlers(channelService)
+	server.MapHandlers(channelService, newsService)
 
 	chCheckerWorker := channelchecker.NewCatcherNews(a.log, channelService)
 

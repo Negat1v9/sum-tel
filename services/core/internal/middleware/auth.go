@@ -16,6 +16,6 @@ func (m *MiddleWareManager) AuthUser(next http.Handler) http.Handler {
 		// 	return
 		// }
 
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), CtxUserIDKey, int64(1))))
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), CtxUserIDKey, int(1))))
 	})
 }

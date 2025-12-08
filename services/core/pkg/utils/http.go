@@ -72,14 +72,18 @@ func LogResponseErr(r *http.Request, log *logger.Logger, err error) {
 	}
 }
 
-func WriteJsonResponse(w http.ResponseWriter, statusCode int, data any) {
+func WriteJsonResponse(w http.ResponseWriter, dataName string, statusCode int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(data)
+	if dataName == "" {
+		json.NewEncoder(w).Encode(data)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]any{dataName: data})
 }
 
 func WriteErrResponse(w http.ResponseWriter, err error) {
 	httpErr := parseError(err)
 
-	WriteJsonResponse(w, httpErr.StatusCode, httpErr)
+	WriteJsonResponse(w, "error", httpErr.StatusCode, httpErr)
 }

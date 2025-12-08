@@ -52,6 +52,43 @@ func (r *NewsRepository) GetAll(ctx context.Context, limit, offset int) ([]model
 	return news, nil
 }
 
+func (r *NewsRepository) GetByUserSubscription(ctx context.Context, userID int, limit, offset int) (*model.NewsList, error) {
+	var total int
+	err := r.db.GetContext(ctx, &total, countNewsByUserSourcesQuary, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if total == 0 {
+		return &model.NewsList{TotalRecords: total}, nil
+	}
+
+	rows, err := r.db.QueryxContext(ctx, getNewsByUserSourcesQuary, userID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	newsList := make([]model.News, 0, limit)
+	for rows.Next() {
+		var news model.News
+		err = rows.Scan(&news.ID, &news.Title, &news.Summary, &news.Language, &news.CreatedAt, &news.NumberOfSources)
+		if err != nil {
+			return nil, err
+		}
+		newsList = append(newsList, news)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return &model.NewsList{
+		TotalRecords: total,
+		News:         newsList,
+	}, nil
+}
 func (r *NewsRepository) Delete(ctx context.Context, id uuid.UUID) (*model.News, error) {
 	news := &model.News{}
 	err := r.db.GetContext(ctx, news, deleteNewsQuery, id)
@@ -85,20 +122,29 @@ func (r *NewsRepository) CreateNewsSources(ctx context.Context, tx sqltransactio
 	_, err := tx.ExecContext(ctx, query, args...)
 	return err
 }
-
-func (r *NewsRepository) DeleteNewsSource(ctx context.Context, id int) (*model.NewsSource, error) {
-	source := &model.NewsSource{}
-	err := r.db.GetContext(ctx, source, deleteNewsSourceQuery, id)
+func (r *NewsRepository) GetNewsSourcesByNewsID(ctx context.Context, newsID uuid.UUID) ([]model.NewsSource, error) {
+	rows, err := r.db.QueryxContext(ctx, getNewsSourcesByNewsIDQuery, newsID)
 	if err != nil {
 		return nil, err
 	}
 
-	return source, nil
-}
+	defer rows.Close()
 
-func (r *NewsRepository) DeleteNewsSourcesByNewsID(ctx context.Context, newsID uuid.UUID) error {
-	_, err := r.db.ExecContext(ctx, deleteNewsSourcesByNewsIDQuery, newsID)
-	return err
+	sources := make([]model.NewsSource, 0, 5)
+	for rows.Next() {
+		var source model.NewsSource
+		err = rows.Scan(&source.ID, &source.MessageID, &source.NewsID, &source.ChannelID, &source.ChannelName)
+		if err != nil {
+			return nil, err
+		}
+		sources = append(sources, source)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return sources, nil
 }
 
 // build dynamic batch insert query for news sources

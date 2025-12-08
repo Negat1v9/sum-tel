@@ -3,6 +3,7 @@ package model
 import (
 	"time"
 
+	parserv1 "github.com/Negat1v9/sum-tel/services/core/internal/grpc/proto"
 	"github.com/google/uuid"
 )
 
@@ -26,13 +27,22 @@ type News struct {
 	Summary   string    `db:"summary" json:"summary"`
 	Language  string    `db:"language" json:"language"`
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
+
+	NumberOfSources int `db:"number_of_sources" json:"number_of_sources"` // number of sources for this news geneated by DB
 }
 
 type NewsSource struct {
 	ID        int       `db:"id" json:"id"`
-	MessageID int64     `db:"message_id" json:"message_id"`
+	MessageID int64     `db:"message_id" json:"message_id"` // telegram message id
 	NewsID    uuid.UUID `db:"news_id" json:"news_id"`
 	ChannelID uuid.UUID `db:"channel_id" json:"channel_id"`
+
+	ChannelName string `db:"channel_name" json:"channel_name"`
+}
+
+type NewsList struct {
+	TotalRecords int    `json:"total_records"`
+	News         []News `json:"news"`
 }
 
 func ConvertNewsKafkaTypeToNews(kafkaNews NewsKafkaType) *News {
@@ -73,4 +83,21 @@ func NewNewsSource(id int, newsID, channelID uuid.UUID) *NewsSource {
 		NewsID:    newsID,
 		ChannelID: channelID,
 	}
+}
+
+// JSON data about news source for response to user
+
+type NewsSourcesListResponse struct {
+	NewsID  string              `json:"news_id"`
+	Sources []*parserv1.Message `json:"sources"`
+}
+
+func ClearGrpcNewsSources(msgs []*parserv1.Message) []*parserv1.Message {
+	for _, msg := range msgs {
+		if msg.Date <= 0 {
+			msg.Date = 0
+		}
+		msg.ChannelId = ""
+	}
+	return msgs
 }
