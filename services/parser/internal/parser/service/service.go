@@ -63,7 +63,7 @@ func (s *ParserService) ParseNewChannel(ctx context.Context, channelID string, u
 		}
 	}()
 
-	err = s.storage.RawMsgRepo().CreateMessages(ctx, tx, convertToModel(channelID, r.Messages))
+	err = s.storage.RawMsgRepo().CreateMessages(ctx, tx, convertToModel(channelID, domain.RawMessageStatusProcessed, r.Messages))
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func (s *ParserService) ParseMessages(ctx context.Context, channelID string, use
 		}
 
 		// save messages in db
-		err = s.storage.RawMsgRepo().CreateMessages(ctx, tx, convertToModel(channelID, msgs))
+		err = s.storage.RawMsgRepo().CreateMessages(ctx, tx, convertToModel(channelID, domain.RawMessageStatusNew, msgs))
 		if err != nil {
 			tx.Rollback()
 			onErrFn(err)
@@ -240,11 +240,12 @@ func calculateParseTime(msgs []tgparser.ParsedMessage) int {
 	return totalDeltaTime / (l - 1) // convert seconds to minutes
 }
 
-func convertToModel(channelID string, msgs []tgparser.ParsedMessage) []domain.RawMessage {
+func convertToModel(channelID, status string, msgs []tgparser.ParsedMessage) []domain.RawMessage {
 	modelMsgs := make([]domain.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
 		modelMsgs = append(modelMsgs, domain.NewRawMsg(
 			channelID,
+			status,
 			msg.Type,
 			msg.MsgId,
 			msg.HtmlText,
