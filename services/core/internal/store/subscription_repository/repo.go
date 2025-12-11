@@ -54,7 +54,7 @@ func (r *UserSubscriptionRepository) GetByID(ctx context.Context, id int) (*mode
 
 func (r *UserSubscriptionRepository) GetByUserID(ctx context.Context, userID int, limit, offset int) (*model.UserSubscriptionWithChannelList, error) {
 	var total int
-	err := r.db.SelectContext(ctx, &total, countAllUserSubscriptionsDQuery, userID)
+	err := r.db.GetContext(ctx, &total, countAllUserSubscriptionsDQuery, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (r *UserSubscriptionRepository) GetByUserID(ctx context.Context, userID int
 	if err != nil {
 		return nil, err
 	}
-	subsInfo := make([]model.UserSubscriptionWithChannel, 0)
+	subsInfo := make([]model.UserSubscriptionWithChannel, 0, limit)
 	for rows.Next() {
 		var subInfo model.UserSubscriptionWithChannel
 		var ch model.Channel

@@ -6,6 +6,12 @@ import (
 	"github.com/lib/pq"
 )
 
+var (
+	// possible statuses of raw messages
+	RawMessageStatusNew       = "new"
+	RawMessageStatusProcessed = "processed"
+)
+
 type RawMessage struct {
 	ID                int64          `json:"id" db:"id"`
 	ChannelID         string         `json:"channel_id" db:"channel_id"`                   // channel ID from which the message was received
@@ -20,13 +26,13 @@ type RawMessage struct {
 	ChannelUsername string `json:"channel_username,omitempty" db:"username"` // channel username, not stored in DB
 }
 
-func NewRawMsg(chID string, contentType string, telegramMessageID int64, htmlText string, mediaURLs pq.StringArray, messageDate time.Time) RawMessage {
+func NewRawMsg(chID string, status, contentType string, telegramMessageID int64, htmlText string, mediaURLs pq.StringArray, messageDate time.Time) RawMessage {
 	return RawMessage{
 		ChannelID:         chID,
 		ContentType:       contentType,
 		TelegramMessageID: telegramMessageID,
 		HTMLText:          htmlText,
-		Status:            "new",
+		Status:            status,
 		MediaURLs:         mediaURLs,
 		MessageDate:       messageDate,
 		ReceivedAt:        time.Now().UTC(),

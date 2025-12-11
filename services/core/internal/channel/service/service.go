@@ -31,6 +31,7 @@ func NewChannelService(stor *store.Storage, grpcClient *grpcclient.TgParserClien
 }
 
 func (s *ChannelService) CreateChannel(ctx context.Context, userID int, username string) (res *model.Channel, err error) {
+	mn := "ChannelService.CreateChannel"
 	// delete "@" if exists
 	username, _ = strings.CutPrefix(username, "@")
 	// check channel exists
@@ -38,7 +39,7 @@ func (s *ChannelService) CreateChannel(ctx context.Context, userID int, username
 	if err == nil {
 		return existsChannel, nil
 	} else if err != sql.ErrNoRows {
-		return nil, err
+		return nil, fmt.Errorf("%s.GetByUsername: %w", mn, err)
 	}
 
 	// create new channel ID
@@ -55,14 +56,14 @@ func (s *ChannelService) CreateChannel(ctx context.Context, userID int, username
 		Username:  username,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s.ParseNewChannel: %w", mn, err)
 	}
 	// create another context Need save channel
 	dbCtx, dbCancel := context.WithTimeout(ctxWithoutCancel, time.Second*60)
 	tx, err := s.store.Transaction(dbCtx)
 	if err != nil {
 		dbCancel()
-		return nil, err
+		return nil, fmt.Errorf("%s.Transaction: %w", mn, err)
 	}
 
 	defer func() {
@@ -84,7 +85,7 @@ func (s *ChannelService) CreateChannel(ctx context.Context, userID int, username
 		dbCtx, tx, model.NewChannel(channelID, username, parsedChannel.Name,
 			parsedChannel.Description, int(parsedChannel.GetMsgInterval()), time.Now()))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s.Create: %w", mn, err)
 	}
 
 	return createdChannel, nil
@@ -93,9 +94,10 @@ func (s *ChannelService) CreateChannel(ctx context.Context, userID int, username
 // return full info about channel by username
 // username without @
 func (s *ChannelService) GetChannelByUsername(ctx context.Context, username string) (*model.Channel, error) {
+	mn := "ChannelService.GetChannelByUsername"
 	channel, err := s.store.ChannelRepo().GetByUsername(ctx, username)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s.GetByUsername: %w", mn, err)
 	}
 	return channel, nil
 }
@@ -122,7 +124,7 @@ func (s *ChannelService) SubscribeChannel(ctx context.Context, userID int, chann
 
 	tx, err := s.store.Transaction(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", mn, err)
+		return nil, fmt.Errorf("%s.Transaction: %w", mn, err)
 	}
 
 	defer func() {
@@ -135,7 +137,7 @@ func (s *ChannelService) SubscribeChannel(ctx context.Context, userID int, chann
 
 	createdSub, err := s.store.SubRepo().Create(ctx, tx, model.NewSub(userID, chID))
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", mn, err)
+		return nil, fmt.Errorf("%s.Create: %w", mn, err)
 	}
 
 	return createdSub, nil
@@ -143,30 +145,37 @@ func (s *ChannelService) SubscribeChannel(ctx context.Context, userID int, chann
 
 // get all user subscriptions
 func (s *ChannelService) UsersSubscriptions(ctx context.Context, userID int, limit, offset int) (*model.UserSubscriptionWithChannelList, error) {
-	return s.store.SubRepo().GetByUserID(ctx, userID, limit, offset)
+	mn := "ChannelService.UsersSubscriptions"
+	subsINfo, err := s.store.SubRepo().GetByUserID(ctx, userID, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("%s.GetByUserID: %w", mn, err)
+	}
+	return subsINfo, nil
 }
 
 func (s *ChannelService) ChannelsToParse(ctx context.Context, limit, offset int) ([]model.Channel, error) {
+	mn := "ChannelService.ChannelsToParse"
 	channels, err := s.store.ChannelRepo().GetUsernamesForParse(ctx, 10, limit, offset)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return []model.Channel{}, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("%s.GetUsernamesForParse: %w", mn, err)
 	}
 	return channels, nil
 }
 
 func (s *ChannelService) ParseChannel(ctx context.Context, channelID uuid.UUID, username string) error {
+	mn := "ChannelService.ParseChannel"
 	result, err := s.grpcClient.ParseMessages(ctx, &parserv1.ParseMessagesRequest{
 		ChannelID: channelID.String(),
 		Username:  username,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("%s.ParseMessages: %w", mn, err)
 	}
 	if !result.Success {
-		return fmt.Errorf("ChannelService.ParseChannel: failed to parse messages for channel %s", username)
+		return fmt.Errorf("%s: failed to parse messages for channel %s", mn, username)
 	}
 
 	updChannel := &model.Channel{
@@ -177,7 +186,7 @@ func (s *ChannelService) ParseChannel(ctx context.Context, channelID uuid.UUID, 
 	}
 	_, err = s.store.ChannelRepo().Update(ctx, updChannel)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s.Update: %w", mn, err)
 	}
 	return nil
 

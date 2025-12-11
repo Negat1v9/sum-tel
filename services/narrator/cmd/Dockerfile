@@ -9,9 +9,7 @@ COPY services/narrator ./services/narrator
 WORKDIR /app/services/narrator
 
 RUN --mount=type=cache,target=/go/pkg/mod \
-    go mod download
-
-RUN go build cmd/main.go
+    go build cmd/main.go
 
 FROM alpine:3.22.2
 
