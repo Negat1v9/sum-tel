@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Negat1v9/sum-tel/services/core/internal/model"
+	"github.com/Negat1v9/sum-tel/shared/sqltransaction"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -15,8 +16,8 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) Create(ctx context.Context, user *model.User) (*model.User, error) {
-	row := r.db.QueryRowxContext(
+func (r *UserRepository) Create(ctx context.Context, tx sqltransaction.Txx, user *model.User) (*model.User, error) {
+	row := tx.QueryRowxContext(
 		ctx,
 		createUserQuery,
 		user.TelegramID,
@@ -35,6 +36,16 @@ func (r *UserRepository) Create(ctx context.Context, user *model.User) (*model.U
 func (r *UserRepository) GetByID(ctx context.Context, id int) (*model.User, error) {
 	user := &model.User{}
 	err := r.db.GetContext(ctx, user, getUserByIDQuery, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (r *UserRepository) GetByTelegramID(ctx context.Context, id int64) (*model.User, error) {
+	user := &model.User{}
+	err := r.db.GetContext(ctx, user, getUserByTelegramIDQuery, id)
 	if err != nil {
 		return nil, err
 	}

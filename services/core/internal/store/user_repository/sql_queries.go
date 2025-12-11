@@ -13,6 +13,12 @@ const (
 		WHERE id = $1
 	`
 
+	getUserByTelegramIDQuery = `
+		SELECT id, telegram_id, username, created_at, updated_at, is_active, role
+		FROM users
+		WHERE telegram_id = $1
+	`
+
 	getAllUsersQuery = `
 		SELECT id, telegram_id, username, created_at, updated_at, is_active, role
 		FROM users

@@ -8,6 +8,7 @@ import (
 	newsservice "github.com/Negat1v9/sum-tel/services/core/internal/news/service"
 	"github.com/Negat1v9/sum-tel/services/core/internal/server"
 	"github.com/Negat1v9/sum-tel/services/core/internal/store"
+	userservice "github.com/Negat1v9/sum-tel/services/core/internal/user/service"
 	channelchecker "github.com/Negat1v9/sum-tel/services/core/internal/workers/channel-checker"
 	"github.com/Negat1v9/sum-tel/shared/config"
 	"github.com/Negat1v9/sum-tel/shared/kafka/consumer"
@@ -49,13 +50,15 @@ func (a *App) Run() error {
 
 	newsService := newsservice.NewNewsService(a.log, storage, aggregatedNewsConsumer, tgParsergRPCClient)
 
+	userService := userservice.NewUserService(storage, a.cfg.WebConfig.TgBotToken, []byte(a.cfg.WebConfig.JwtSecret))
+
 	go func() {
 		a.log.Infof("start aggregatedNewsConsumer processing")
 		aggregatedNewsConsumer.ProcessMessages(context.TODO(), newsService.ProcessNewsHandler(), 2)
 	}()
 
 	server := server.New(a.cfg, a.log)
-	server.MapHandlers(channelService, newsService)
+	server.MapHandlers(channelService, newsService, userService)
 
 	chCheckerWorker := channelchecker.NewCatcherNews(a.log, channelService)
 

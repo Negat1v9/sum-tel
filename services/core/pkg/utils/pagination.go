@@ -22,7 +22,7 @@ func GetLimitParam(v url.Values, maxLimit int) int {
 func GetOffset(v url.Values) int {
 	page, err := strconv.ParseInt(v.Get("offset"), 10, 32)
 	if err != nil {
-		return 1
+		return 0
 	}
 
 	return int(page)
