@@ -17,6 +17,17 @@ type User struct {
 	Role       string    `db:"role" json:"-"`
 }
 
+func NewUser(tgID int64, username string, role string) *User {
+	return &User{
+		TelegramID: tgID,
+		Username:   username,
+		CreatedAt:  time.Now().UTC(),
+		UpdatedAt:  time.Now().UTC(),
+		IsActive:   true,
+		Role:       role,
+	}
+}
+
 type UserLoginResponse struct {
 	Token string `json:"token"`
 }

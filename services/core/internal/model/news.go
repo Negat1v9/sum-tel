@@ -14,6 +14,7 @@ type NewsKafkaType struct {
 	Summary  string            `json:"summary"`
 	Sources  []SourceKafkaType `json:"sources"`
 	Language string            `json:"language"`
+	Category string            `json:"category"`
 }
 
 type SourceKafkaType struct {
@@ -26,6 +27,7 @@ type News struct {
 	Title     string    `db:"title" json:"title"`
 	Summary   string    `db:"summary" json:"summary"`
 	Language  string    `db:"language" json:"language"`
+	Category  string    `db:"category" json:"category"`
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 
 	NumberOfSources int `db:"number_of_sources" json:"number_of_sources"` // number of sources for this news geneated by DB
@@ -51,6 +53,7 @@ func ConvertNewsKafkaTypeToNews(kafkaNews NewsKafkaType) *News {
 		Title:    kafkaNews.Title,
 		Summary:  kafkaNews.Summary,
 		Language: kafkaNews.Language,
+		Category: kafkaNews.Category,
 	}
 }
 
@@ -67,12 +70,13 @@ func ConvertSourceKafkaTypesToNewsSources(newsID uuid.UUID, kafkaSource []Source
 	return r
 }
 
-func NewNews(id uuid.UUID, title, summary, language string) *News {
+func NewNews(id uuid.UUID, title, summary, language, category string) *News {
 	return &News{
 		ID:        id,
 		Title:     title,
 		Summary:   summary,
 		Language:  language,
+		Category:  category,
 		CreatedAt: time.Now(),
 	}
 }

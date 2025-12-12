@@ -2,6 +2,8 @@ package userservice
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -43,7 +45,23 @@ func (s *UserService) LoginOrRegister(ctx context.Context, telegramInitData stri
 	}
 
 	user, err := s.store.UserRepo().GetByTelegramID(ctx, initData.User.ID)
-	if err != nil {
+	switch {
+	case errors.Is(sql.ErrNoRows, err):
+		tx, err := s.store.Transaction(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("%s.Transaction: %w", mn, err)
+		}
+
+		user, err = s.store.UserRepo().Create(ctx, tx, model.NewUser(initData.User.ID, initData.User.Username, model.RoleUser))
+		if err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("%s.Create: %w", mn, err)
+		}
+		err = tx.Commit()
+		if err != nil {
+			return nil, fmt.Errorf("%s.Commit: %w", mn, err)
+		}
+	case err != nil:
 		return nil, fmt.Errorf("%s.GetByTelegramID: %w", mn, err)
 	}
 

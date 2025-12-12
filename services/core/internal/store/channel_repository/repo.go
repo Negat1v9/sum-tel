@@ -22,6 +22,8 @@ func (r *ChannelRepository) Create(ctx context.Context, tx sqltransaction.Txx, c
 		ctx,
 		createChannelQuery,
 		channel.ID,
+		channel.Status,
+		channel.CreatedBy,
 		channel.Username,
 		channel.Title,
 		channel.Description,
@@ -87,6 +89,7 @@ func (r *ChannelRepository) Update(ctx context.Context, channel *model.Channel) 
 		channel.Description,
 		channel.ParseInterval,
 		channel.LastParsedAt,
+		channel.Status,
 	)
 
 	if err := row.StructScan(channel); err != nil {
