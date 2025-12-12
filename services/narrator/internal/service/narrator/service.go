@@ -3,6 +3,7 @@ package narrator
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"sync"
 	"time"
 
@@ -58,7 +59,10 @@ func (s *Service) RawMessagesHandler() consumer.ProcFunc {
 
 		rawMsgs := make([]domain.RawMessage, 0, len(msgs))
 		s.log.Debugf("Received message: len %d", len(msgs))
-		for _, msg := range msgs {
+
+		// key is generated short id, value is actual channel uuid
+		chIdMap := make(map[string]string)
+		for i, msg := range msgs {
 
 			if shutDownCtx.Err() != nil {
 				return false
@@ -71,6 +75,11 @@ func (s *Service) RawMessagesHandler() consumer.ProcFunc {
 				s.log.Errorf("%s: %v", mn, err)
 				continue
 			}
+			// set short id for optimize ai request and not send long actual channelID
+			shortChID := strconv.Itoa(i)
+			chIdMap[shortChID] = rawMsg.ChannelID
+			rawMsg.ChannelID = shortChID
+
 			rawMsgs = append(rawMsgs, rawMsg)
 		}
 
@@ -81,6 +90,13 @@ func (s *Service) RawMessagesHandler() consumer.ProcFunc {
 		if err != nil {
 			s.log.Errorf("%s: %v", mn, err)
 			return false
+		}
+
+		// map actual channel ids
+		for i := range aggregatedMsgs.AggregatedNews {
+			for j, s := range aggregatedMsgs.AggregatedNews[i].Sources {
+				aggregatedMsgs.AggregatedNews[i].Sources[j].ChannelID = chIdMap[s.ChannelID]
+			}
 		}
 
 		// pruducerCtx not block main shutdown process
