@@ -141,9 +141,11 @@ func (s *NewsService) saveWithRetrys(ctx context.Context, newNews *model.News, s
 		if err := tx.Commit(); err != nil {
 			onErrFn(tx, fmt.Errorf("saveWithRetrys: cannot commit transaction: %w", err))
 		}
+
+		return nil
 	}
 
-	return nil
+	return errors.Join(errorsStack...)
 }
 
 func convertSourcesToGrpcFilters(sources []model.NewsSource) []*parserv1.FiltersRawMessages {
