@@ -82,8 +82,8 @@ func (s *ChannelService) CreateChannel(ctx context.Context, userID int, username
 
 	// add channel information in db
 	createdChannel, err := s.store.ChannelRepo().Create(
-		dbCtx, tx, model.NewChannel(channelID, username, parsedChannel.Name,
-			parsedChannel.Description, int(parsedChannel.GetMsgInterval()), time.Now()))
+		dbCtx, tx, model.NewChannel(channelID, model.ChannelStatusActive, username, parsedChannel.Name,
+			parsedChannel.Description, userID, int(parsedChannel.GetMsgInterval()), time.Now()))
 	if err != nil {
 		return nil, fmt.Errorf("%s.Create: %w", mn, err)
 	}

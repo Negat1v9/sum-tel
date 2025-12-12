@@ -27,6 +27,7 @@ func (r *NewsRepository) Create(ctx context.Context, tx sqltransaction.Txx, news
 		news.Title,
 		news.Summary,
 		news.Language,
+		news.Category,
 	)
 
 	return err
@@ -73,7 +74,7 @@ func (r *NewsRepository) GetByUserSubscription(ctx context.Context, userID int, 
 	newsList := make([]model.News, 0, limit)
 	for rows.Next() {
 		var news model.News
-		err = rows.Scan(&news.ID, &news.Title, &news.Summary, &news.Language, &news.CreatedAt, &news.NumberOfSources)
+		err = rows.Scan(&news.ID, &news.Title, &news.Summary, &news.Language, &news.Category, &news.CreatedAt, &news.NumberOfSources)
 		if err != nil {
 			return nil, err
 		}

@@ -2,18 +2,18 @@ package newsrepository
 
 const (
 	createNewsQuery = `
-		INSERT INTO news (id, title, summary, language)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO news (id, title, summary, language, category)
+		VALUES ($1, $2, $3, $4, $5)
 	`
 
 	getNewsByIDQuery = `
-		SELECT id, title, summary, language, created_at
+		SELECT id, title, summary, language, category, created_at
 		FROM news
 		WHERE id = $1
 	`
 
 	getAllNewsQuery = `
-		SELECT id, title, summary, language, created_at
+		SELECT id, title, summary, language, category, created_at
 		FROM news
 		ORDER BY created_at DESC
 		LIMIT $1 OFFSET $2
@@ -25,7 +25,7 @@ const (
 			WHERE us.user_id = $1
 	`
 	getNewsByUserSourcesQuary = `
-		SELECT n.id, n.title, n.summary, n.language, n.created_at, COUNT(ns.id) AS number_of_sources
+		SELECT n.id, n.title, n.summary, n.language, n.category, n.created_at, COUNT(ns.id) AS number_of_sources
 				FROM user_subscriptions us
 			JOIN news_sources ns ON ns.channel_id = us.channel_id
 			JOIN news n ON ns.news_id = n.id
@@ -38,7 +38,7 @@ const (
 	deleteNewsQuery = `
 		DELETE FROM news
 		WHERE id = $1
-		RETURNING id, title, summary, language, created_at
+		RETURNING id, title, summary, language, category, created_at
 	`
 
 	createNewsSourceQuery = `

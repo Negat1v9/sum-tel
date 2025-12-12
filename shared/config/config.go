@@ -38,6 +38,7 @@ type AppConfig struct {
 type WebConfig struct {
 	ListenAddress string
 	JwtSecret     string
+	TgBotToken    string
 	ReadTimeout   int64
 	WriteTimeout  int64
 }

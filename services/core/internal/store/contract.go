@@ -20,8 +20,9 @@ var (
 )
 
 type UserRepository interface {
-	Create(ctx context.Context, user *model.User) (*model.User, error)
+	Create(ctx context.Context, tx sqltransaction.Txx, user *model.User) (*model.User, error)
 	GetByID(ctx context.Context, id int) (*model.User, error)
+	GetByTelegramID(ctx context.Context, id int64) (*model.User, error)
 	GetAll(ctx context.Context, limit, offset int) ([]model.User, error)
 	Update(ctx context.Context, user *model.User) (*model.User, error)
 	Delete(ctx context.Context, id int) (*model.User, error)

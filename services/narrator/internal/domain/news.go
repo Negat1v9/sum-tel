@@ -5,6 +5,7 @@ type AggregatedNews struct {
 	Summary  string   `json:"summary"`
 	Sources  []Source `json:"sources"`
 	Language string   `json:"language"`
+	Category string   `json:"category"`
 }
 
 type Source struct {

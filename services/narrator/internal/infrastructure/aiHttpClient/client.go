@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/Negat1v9/sum-tel/services/narrator/internal/domain"
 	"github.com/Negat1v9/sum-tel/shared/config"
@@ -42,14 +43,8 @@ func (c *Client) DoAggregation(ctx context.Context, msgs []domain.RawMessage) (*
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", mn, err)
 	}
-	body := RequestBody{
-		Model: c.model,
-		Messages: []Message{
-			{
-				Role:    "user",
-				Content: string(bMsgs),
-			},
-		},
+	body := RequestBodyV2{
+		Message: string(bMsgs),
 	}
 	bBody, err := json.Marshal(&body)
 	if err != nil {
@@ -70,20 +65,22 @@ func (c *Client) DoAggregation(ctx context.Context, msgs []domain.RawMessage) (*
 
 	defer resp.Body.Close()
 
-	var respBody ResponseBody
+	var respBody ResponseBodyV2
 	if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
 		return nil, fmt.Errorf("%s unmarshal ResponseBody: %w", mn, err)
 	}
 
-	if len(respBody.Choices) == 0 {
-		return nil, fmt.Errorf("%s: no choices in response", mn)
-	}
-
 	var aggregation domain.AggregationResponse
-	err = json.Unmarshal([]byte(respBody.Choices[0].Message.Content), &aggregation)
+	err = json.Unmarshal([]byte(clearJson(respBody.Message)), &aggregation)
 	if err != nil {
 		return nil, fmt.Errorf("%s unmarshal AggregationResponse: %w", mn, err)
 	}
 
 	return &aggregation, nil
+}
+
+func clearJson(s string) string {
+	s, _ = strings.CutPrefix(s, "```json")
+	s, _ = strings.CutSuffix(s, "```")
+	return s
 }
