@@ -1,3 +1,5 @@
+appConfig:
+  Env: "local"
 grpcServerConfig:
   GPRPCPort: 50043
 
@@ -8,3 +10,8 @@ postgresConfig:
   DbName: "parserdb"
   DbPassword: "parserpassword"
   DbSslMode: "disable"
+
+rawMessageProducerConfig:
+  Topic: "raw-messages"
+  Broker: "kafka:9092"
+  BatchSize: 3

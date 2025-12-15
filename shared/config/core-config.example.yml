@@ -2,7 +2,8 @@ appConfig:
   Env: "local"
 webConfig:
   ListenAddress: ":8888"
-  JwtSecret: "your_jwt"
+  JwtSecret: "your_jwt" # secret for JWT
+  TgBotToken: "" # token for telegram bot
   ReadTimeout: 15
   WriteTimeout: 15
 
@@ -13,6 +14,12 @@ postgresConfig:
   DbHost: "postgres"
   DbPort: 5432
   DbUser: "postgres"
-  DbPassword: "veryStrongPassword"
+  DbPassword: "veryStrongPassword" # password for postgres
   DbName: "SumTel"
   DbSslMode: "disable"
+
+consumerConfig:
+  Topic: "news-aggregated"
+  Broker: "kafka:9092"
+  GroupID: "group-1"
+  AutoCommit: false

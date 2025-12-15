@@ -1,0 +1,18 @@
+appConfig:
+  Env: "local"
+rawMessageConsumerCfg:
+  Topic: "raw-messages"
+  Broker: "kafka:9092"
+  GroupID: "group-1"
+  AutoCommit: false
+
+narrationProducerCfg:
+  Topic: "news-aggregated"
+  Broker: "kafka:9092"
+  BatchSize: 3
+
+aiClientCfg:
+  BaseUrl: "" # base url of AI service
+  Token: "" # token for AI service
+  Model: "DeepSeek-V3.2" # model name
+  SystemPrompt: "ОТВЕТ: JSON" # system prompt for AI model
