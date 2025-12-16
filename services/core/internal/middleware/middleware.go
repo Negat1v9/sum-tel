@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 
+	"github.com/Negat1v9/sum-tel/services/core/pkg/metrics"
 	"github.com/Negat1v9/sum-tel/shared/config"
 )
 
@@ -15,21 +16,23 @@ type Middleware func(http.Handler) http.Handler
 
 // Info: used to build all the necessary middleware as a constructor
 type MiddleWareManager struct {
-	cfg *config.CoreConfig
+	cfg     *config.CoreConfig
+	metrics *metrics.PrometheusMetrics
 }
 
-func New(cfg *config.CoreConfig) *MiddleWareManager {
+func New(cfg *config.CoreConfig, metrics *metrics.PrometheusMetrics) *MiddleWareManager {
 	return &MiddleWareManager{
-		cfg: cfg,
+		cfg:     cfg,
+		metrics: metrics,
 	}
 }
 
-// Info: create middleware for all requests for CORS, logging and same
-func (mw *MiddleWareManager) BasicMW() Middleware {
-	return createStack(cors)
-}
+// // Info: create middleware for all requests for CORS, logging and same
+// func (mw *MiddleWareManager) BasicMW() Middleware {
+// 	return createStack(cors, mw.MetricsMiddleware)
+// }
 
-func createStack(xs ...Middleware) Middleware {
+func CreateStack(xs ...Middleware) Middleware {
 	return func(next http.Handler) http.Handler {
 		for i := 0; i < len(xs); i++ {
 			x := xs[i]

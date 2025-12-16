@@ -10,12 +10,20 @@ import (
 	newsservice "github.com/Negat1v9/sum-tel/services/core/internal/news/service"
 	userhttp "github.com/Negat1v9/sum-tel/services/core/internal/user/http"
 	userservice "github.com/Negat1v9/sum-tel/services/core/internal/user/service"
+	"github.com/Negat1v9/sum-tel/services/core/pkg/metrics"
 )
 
 func (s *Server) MapHandlers(chService *channelservice.ChannelService, newsService *newsservice.NewsService, userService *userservice.UserService) {
 	router := http.NewServeMux()
 
-	mw := middleware.New(s.cfg)
+	// run metrics prometheus
+	metrics, err := metrics.NewMetric(":9090", "core_api")
+	if err != nil {
+		s.log.Errorf("Failed to initialize metrics: %v", err)
+		return
+	}
+
+	mw := middleware.New(s.cfg, metrics)
 
 	// initialize handlers
 	channelHandler := channelhttp.NewChannelHandler(s.log, s.cfg, chService)
@@ -36,7 +44,7 @@ func (s *Server) MapHandlers(chService *channelservice.ChannelService, newsServi
 
 	apiV1Routes.Handle("/api/", http.StripPrefix("/api", router))
 
-	basicMW := mw.BasicMW()
+	basicMW := middleware.CreateStack(middleware.Cors, mw.MetricsMiddleware)
 
 	s.server.Handler = basicMW(apiV1Routes)
 }

@@ -58,6 +58,8 @@ func parseError(err error) *Error {
 		return NewError(http.StatusRequestTimeout, ErrRequestTimeout, nil)
 	case strings.Contains(err.Error(), "Unmarshal"):
 		return NewError(http.StatusBadRequest, ErrBadRequest, nil)
+	case errors.Is(err, ErrNotValid):
+		return NewError(http.StatusUnauthorized, ErrUnauthorized, nil)
 	default:
 		if restErr, ok := err.(*Error); ok {
 			return restErr

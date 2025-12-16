@@ -111,10 +111,38 @@ services:
         condition: service_healthy
     networks:
       - my-network
+  
+  prometheus:
+    image: prom/prometheus:v3.8.0-rc.1
+    ports:
+      - 9090:9090
+    volumes:
+      - ./metrics/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    networks:
+      - my-network
+  grafana:
+    image: grafana/grafana:12.1
+    ports:
+      - 3000:3000
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./metrics/grafana/grafana.yml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - grafana_storage:/var/lib/grafana
+    networks:
+      - my-network
 
 volumes:
   db_data:
   kafka_data:
+  prometheus_data:
+  grafana_storage:
 networks:
   my-network:
     driver: bridge
