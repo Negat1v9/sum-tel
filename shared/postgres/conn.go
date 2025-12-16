@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	maxOpenConn     = 60
-	connMaxLife     = 120
-	maxIdleConns    = 30
-	connMaxIdleTime = 20
+	maxOpenConn     = 20
+	connMaxLife     = 10
+	maxIdleConns    = 6
+	connMaxIdleTime = 2
 )
 
 func NewPostgresConn(host string, port int, user, password, dbname string) (*sqlx.DB, error) {
