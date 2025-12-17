@@ -34,25 +34,32 @@ func NewClient(cfg *config.AiClientCfg, isStreaming bool) *Client {
 }
 
 // sends a request to the AI service to aggregate raw messages into a summarized response
-func (c *Client) DoAggregation(ctx context.Context, msgs []domain.RawMessage) (*domain.AggregationResponse, error) {
+func (c *Client) DoAggregation(ctx context.Context, msgs []domain.RawMessage) (*domain.AggregationResponse, int, error) {
 	mn := "Client.DoAggregation"
 	type Req struct {
 		Messages []domain.RawMessage `json:"messages"`
 	}
 	bMsgs, err := json.Marshal(&Req{Messages: msgs})
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", mn, err)
+		return nil, 0, fmt.Errorf("%s: %w", mn, err)
 	}
-	body := RequestBodyV2{
-		Message: string(bMsgs),
+	body := RequestBody{
+		Model: c.model,
+		Messages: []Message{
+			{
+				Role:    "user",
+				Content: string(bMsgs),
+			},
+		},
 	}
+
 	bBody, err := json.Marshal(&body)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", mn, err)
+		return nil, 0, fmt.Errorf("%s: %w", mn, err)
 	}
 	req, err := http.NewRequestWithContext(ctx, "POST", c.baseUrl, bytes.NewReader(bBody))
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", mn, err)
+		return nil, 0, fmt.Errorf("%s: %w", mn, err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -60,23 +67,27 @@ func (c *Client) DoAggregation(ctx context.Context, msgs []domain.RawMessage) (*
 
 	resp, err := c.c.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", mn, err)
+		return nil, 0, fmt.Errorf("%s: %w", mn, err)
 	}
 
 	defer resp.Body.Close()
 
-	var respBody ResponseBodyV2
+	var respBody ResponseBody
 	if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
-		return nil, fmt.Errorf("%s unmarshal ResponseBody: %w", mn, err)
+		return nil, 0, fmt.Errorf("%s unmarshal ResponseBody: %w", mn, err)
+	}
+
+	if len(respBody.Choices) == 0 {
+		return nil, respBody.Usage.TotalTokens, fmt.Errorf("%s no choices", mn)
 	}
 
 	var aggregation domain.AggregationResponse
-	err = json.Unmarshal([]byte(clearJson(respBody.Message)), &aggregation)
+	err = json.Unmarshal([]byte(clearJson(respBody.Choices[0].Message.Content)), &aggregation)
 	if err != nil {
-		return nil, fmt.Errorf("%s unmarshal AggregationResponse: %w", mn, err)
+		return nil, respBody.Usage.TotalTokens, fmt.Errorf("%s unmarshal AggregationResponse: %w", mn, err)
 	}
 
-	return &aggregation, nil
+	return &aggregation, respBody.Usage.TotalTokens, nil
 }
 
 func clearJson(s string) string {

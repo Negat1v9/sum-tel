@@ -86,7 +86,7 @@ func (s *Service) RawMessagesHandler() consumer.ProcFunc {
 		aiClientCtx, cancel := context.WithTimeout(shutDownCtx, time.Second*120)
 		defer cancel()
 		// proccess raw RawMessage
-		aggregatedMsgs, err := s.aiClient.DoAggregation(aiClientCtx, rawMsgs)
+		aggregatedMsgs, tokens, err := s.aiClient.DoAggregation(aiClientCtx, rawMsgs)
 		if err != nil {
 			s.log.Errorf("%s: %v", mn, err)
 			return false
