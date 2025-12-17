@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // Postgres driver
@@ -28,9 +29,9 @@ func NewPostgresConn(host string, port int, user, password, dbname string) (*sql
 	}
 
 	dbx.SetMaxOpenConns(maxOpenConn)
-	dbx.SetConnMaxLifetime(connMaxLife)
+	dbx.SetConnMaxLifetime(time.Minute * connMaxLife)
 	dbx.SetMaxIdleConns(maxIdleConns)
-	dbx.SetConnMaxIdleTime(connMaxIdleTime)
+	dbx.SetConnMaxIdleTime(time.Minute * connMaxIdleTime)
 
 	return dbx, nil
 }

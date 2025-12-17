@@ -9,6 +9,7 @@ import (
 
 	"github.com/Negat1v9/sum-tel/services/narrator/internal/domain"
 	aihttpclient "github.com/Negat1v9/sum-tel/services/narrator/internal/infrastructure/aiHttpClient"
+	"github.com/Negat1v9/sum-tel/services/narrator/pkg/metrics"
 	"github.com/Negat1v9/sum-tel/shared/kafka/consumer"
 	"github.com/Negat1v9/sum-tel/shared/kafka/producer"
 	"github.com/Negat1v9/sum-tel/shared/logger"
@@ -21,15 +22,17 @@ type Service struct {
 	rawMsgCosnumer         *consumer.Consumer
 	newsAggregatorProducer *producer.Producer
 
-	wg *sync.WaitGroup
+	metrics *metrics.PrometheusMetrics
+	wg      *sync.WaitGroup
 }
 
-func NewService(log *logger.Logger, aiClient *aihttpclient.Client, consumer *consumer.Consumer, producer *producer.Producer, wg *sync.WaitGroup) *Service {
+func NewService(log *logger.Logger, aiClient *aihttpclient.Client, consumer *consumer.Consumer, producer *producer.Producer, metrics *metrics.PrometheusMetrics, wg *sync.WaitGroup) *Service {
 	s := &Service{
 		log:                    log,
 		aiClient:               aiClient,
 		rawMsgCosnumer:         consumer,
 		newsAggregatorProducer: producer,
+		metrics:                metrics,
 		wg:                     wg,
 	}
 
@@ -89,8 +92,11 @@ func (s *Service) RawMessagesHandler() consumer.ProcFunc {
 		aggregatedMsgs, tokens, err := s.aiClient.DoAggregation(aiClientCtx, rawMsgs)
 		if err != nil {
 			s.log.Errorf("%s: %v", mn, err)
+			s.metrics.AddTokens(false, tokens)
 			return false
 		}
+
+		s.metrics.AddTokens(true, tokens)
 
 		// map actual channel ids
 		for i := range aggregatedMsgs.AggregatedNews {

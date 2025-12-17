@@ -8,6 +8,7 @@ import (
 
 	aihttpclient "github.com/Negat1v9/sum-tel/services/narrator/internal/infrastructure/aiHttpClient"
 	"github.com/Negat1v9/sum-tel/services/narrator/internal/service/narrator"
+	"github.com/Negat1v9/sum-tel/services/narrator/pkg/metrics"
 
 	"github.com/Negat1v9/sum-tel/shared/config"
 	"github.com/Negat1v9/sum-tel/shared/kafka/consumer"
@@ -33,8 +34,13 @@ func main() {
 
 	wg := &sync.WaitGroup{}
 
+	metrics, err := metrics.NewMetric(":9090", "narrator")
+	if err != nil {
+		panic("Failed to initialize metrics")
+	}
+
 	aiClient := aihttpclient.NewClient(&cfg.AiClientCfg, false)
-	service := narrator.NewService(log, aiClient, rawMsgConsumer, AggregatorProducer, wg)
+	service := narrator.NewService(log, aiClient, rawMsgConsumer, AggregatorProducer, metrics, wg)
 
 	go rawMsgConsumer.ProcessMessages(shutdown, service.RawMessagesHandler(), 20)
 
