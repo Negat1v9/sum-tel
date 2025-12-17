@@ -9,6 +9,7 @@ import (
 
 	parserv1 "github.com/Negat1v9/sum-tel/services/parser/internal/api/proto"
 	"github.com/Negat1v9/sum-tel/services/parser/internal/domain"
+	"github.com/Negat1v9/sum-tel/services/parser/pkg/metrics"
 
 	tgparser "github.com/Negat1v9/sum-tel/services/parser/internal/parser/tgParser"
 	"github.com/Negat1v9/sum-tel/services/parser/internal/store"
@@ -31,11 +32,12 @@ type ParserService struct {
 	parser  *tgparser.TgParser
 	storage *store.Store
 
+	metrics             *metrics.PrometheusMetrics
 	rawMsgKafkaProducer *producer.Producer
 }
 
-func NewParserService(log *logger.Logger, parser *tgparser.TgParser, storage *store.Store, rawMsgKafkaProducer *producer.Producer) *ParserService {
-	return &ParserService{log: log, parser: parser, storage: storage, rawMsgKafkaProducer: rawMsgKafkaProducer}
+func NewParserService(log *logger.Logger, parser *tgparser.TgParser, storage *store.Store, metrics *metrics.PrometheusMetrics, rawMsgKafkaProducer *producer.Producer) *ParserService {
+	return &ParserService{log: log, parser: parser, storage: storage, metrics: metrics, rawMsgKafkaProducer: rawMsgKafkaProducer}
 }
 
 func (s *ParserService) ParseNewChannel(ctx context.Context, channelID string, username string) (*parserv1.NewChannelResponse, error) {
@@ -46,9 +48,15 @@ func (s *ParserService) ParseNewChannel(ctx context.Context, channelID string, u
 		return nil, fmt.Errorf("%s.ParseChannel: %w", mn, err)
 	}
 
+	// add metrics for parsed channel and messages
+	s.metrics.IncParsedChannels()
+
 	if len(r.Messages) == 0 {
 		return nil, fmt.Errorf("%s: %w", mn, ErrChannelNoMessages)
 	}
+
+	s.metrics.AddParsedMessages(username, len(r.Messages))
+
 	// save in db messages if exitst
 	tx, err := s.storage.Transaction(ctx)
 	if err != nil {
@@ -124,6 +132,8 @@ func (s *ParserService) ParseMessages(ctx context.Context, channelID string, use
 		if len(msgs) == 0 {
 			break
 		}
+		// add metrics for parsed messages
+		s.metrics.AddParsedMessages(username, len(msgs))
 		// add medium duraion between messages
 		msgsInteval += int32(calculateParseTime(msgs))
 		// save new messages in db

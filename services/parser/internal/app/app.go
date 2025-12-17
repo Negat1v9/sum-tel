@@ -10,6 +10,7 @@ import (
 	tgparser "github.com/Negat1v9/sum-tel/services/parser/internal/parser/tgParser"
 	storage "github.com/Negat1v9/sum-tel/services/parser/internal/store"
 	proccessrawmessage "github.com/Negat1v9/sum-tel/services/parser/internal/workers/proccessRawMessage"
+	"github.com/Negat1v9/sum-tel/services/parser/pkg/metrics"
 	"github.com/Negat1v9/sum-tel/shared/config"
 	"github.com/Negat1v9/sum-tel/shared/kafka/producer"
 	"github.com/Negat1v9/sum-tel/shared/logger"
@@ -23,7 +24,7 @@ type App struct {
 	port       int
 }
 
-func New(cfg *config.ParserServiceConfig, db *sqlx.DB) *App {
+func New(cfg *config.ParserServiceConfig, db *sqlx.DB, metrics *metrics.PrometheusMetrics) *App {
 	shutDownCtx := context.TODO()
 
 	logger := logger.NewLogger(cfg.AppConfig.Env)
@@ -32,7 +33,7 @@ func New(cfg *config.ParserServiceConfig, db *sqlx.DB) *App {
 
 	tgParser := tgparser.NewTgParser()
 
-	msgsService := service.NewParserService(logger, tgParser, storage.NewStorage(db), rawMsgProducer)
+	msgsService := service.NewParserService(logger, tgParser, storage.NewStorage(db), metrics, rawMsgProducer)
 
 	rawMessageWorker := proccessrawmessage.NewWorker(logger, msgsService)
 
