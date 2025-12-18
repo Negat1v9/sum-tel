@@ -1,10 +1,19 @@
 services:
+
+  proxy:
+    image: haproxy:lts-alpine3.23
+    ports:
+      - 8088:8088
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    networks:
+      - my-network
   rest:
     build:
       context: .
       dockerfile: ./services/core/cmd/Dockerfile
-    ports:
-      - 8080:8888
+    # ports:
+    #   - 8080:8888
     expose:
       - 8888
     depends_on:
