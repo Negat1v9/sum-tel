@@ -86,7 +86,7 @@ func (s *ParserService) ParseNewChannel(ctx context.Context, channelID string, u
 		Username:    r.Username,
 		Name:        r.Name,
 		Description: r.Description,
-		MsgInterval: DefaultTimePerMessage,
+		MsgInterval: int32(calculateParseTime(r.Messages)),
 	}, nil
 }
 
@@ -159,7 +159,7 @@ func (s *ParserService) ParseMessages(ctx context.Context, channelID string, use
 	}
 	return &parserv1.ParseMessagesResponse{
 		Success:     true,
-		MsgInterval: DefaultTimePerMessage,
+		MsgInterval: msgsInteval / int32(numberIterations),
 	}, nil
 }
 
@@ -247,7 +247,7 @@ func calculateParseTime(msgs []tgparser.ParsedMessage) int {
 
 	}
 
-	return totalDeltaTime / (l - 1) // convert seconds to minutes
+	return totalDeltaTime / l
 }
 
 func convertToModel(channelID, status string, msgs []tgparser.ParsedMessage) []domain.RawMessage {

@@ -148,11 +148,17 @@ func (p *TgParser) parseMsg(doc *goquery.Document) []ParsedMessage {
 
 		msg.HtmlText, _ = msgContent.Html()
 		msgLink, ok := s.Find(".tgme_widget_message").Attr("data-post")
+
+		// parse datetime message actual was posted at channel
+		dateTime, _ := s.Find(".tgme_widget_message_date").Find("time").Attr("datetime")
+		msg.Date, _ = time.Parse(time.RFC3339, dateTime)
+
 		if ok {
 			link := strings.TrimSpace(msgLink)
 			// extract msg id from link
 			msg.MsgId, _ = strconv.ParseInt(link[strings.LastIndex(link, "/")+1:], 10, 64)
 		}
+
 		// if message contain a media files foe each last message id is last media message id
 		s.Find(".tgme_widget_message_grouped_wrap").Find("a").Each(func(i int, s *goquery.Selection) {
 			groupLink, _ := s.Attr("href")
