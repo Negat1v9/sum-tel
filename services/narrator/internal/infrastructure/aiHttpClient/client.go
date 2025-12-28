@@ -50,6 +50,10 @@ func (c *Client) DoAggregation(ctx context.Context, msgs []domain.RawMessage) (*
 				Role:    "user",
 				Content: string(bMsgs),
 			},
+			{
+				Role:    "system",
+				Content: c.systemPromt,
+			},
 		},
 	}
 
