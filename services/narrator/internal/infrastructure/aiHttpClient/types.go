@@ -33,15 +33,3 @@ type Usage struct {
 	CompletionTokens int `json:"completion_tokens"`
 	TotalTokens      int `json:"total_tokens"`
 }
-
-type RequestBodyV2 struct {
-	Message         string   `json:"message"`
-	ParentMessageId string   `json:"parent_message_id,omitempty"`
-	FileIds         []string `json:"file_ids,omitempty"`
-}
-
-type ResponseBodyV2 struct {
-	Message string `json:"message"`
-	ID      string `json:"id"`
-	// FinishReason map[string]any `json:"finish_reason"`
-}
