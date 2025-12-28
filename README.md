@@ -30,6 +30,12 @@ The system is divided into several specialized microservices:
 - **Narrator Service (`services/narrator`):** The AI-driven component that consumes raw messages and generates human-readable summaries.
 - **Migrator (`services/migrator`):** Handles database schema migrations and versioning.
 
+### Visualization of service operation
+
+<div align="center">
+    <img src="./docs/screenshots/arch.png" style="width: 100%; display: block; margin-left: auto; margin-right: auto;" />
+</div>
+
 ## Getting Started
 
 ### Prerequisites
